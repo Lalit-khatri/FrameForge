@@ -1,0 +1,539 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.FrameForge-arm64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/sources",
+      "importPath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Engine/CompositionEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Export/ExportPipeline.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/FrameForgeApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/Project.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/TimelineModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/VideoEffects.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/Helpers.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/ThumbnailGenerator.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/ViewModels/EditorViewModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/AudioMixerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/EditorView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ExportView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/FiltersView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/MediaPickerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ProjectsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/SpeedControlView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TextEditorView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TimelineView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ToolbarView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TransitionsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "FrameForge",
+      "moduleOutputPath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/Modules/FrameForge.swiftmodule",
+      "objects" : [
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/CompositionEngine.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ExportPipeline.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/FrameForgeApp.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/Project.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TimelineModels.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/VideoEffects.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/Helpers.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ThumbnailGenerator.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/EditorViewModel.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/AudioMixerView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ContentView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/EditorView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ExportView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/FiltersView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/MediaPickerView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ProjectsView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/SpeedControlView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TextEditorView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TimelineView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ToolbarView.swift.o",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TransitionsView.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx10.13",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j14",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/include/FrameForge-Swift.h",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-target",
+        "arm64-apple-ios17.0-simulator",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "frameforge"
+      ],
+      "outputFileMapPath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/CompositionEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ExportPipeline.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/FrameForgeApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/Project.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TimelineModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/VideoEffects.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/Helpers.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ThumbnailGenerator.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/EditorViewModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/AudioMixerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/EditorView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ExportView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/FiltersView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/MediaPickerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ProjectsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/SpeedControlView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TextEditorView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TimelineView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/ToolbarView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/TransitionsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/Modules/FrameForge.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/lalitkhatri/FrameForge/FrameForge/Engine/CompositionEngine.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Export/ExportPipeline.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/FrameForgeApp.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Models/Project.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Models/TimelineModels.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Models/VideoEffects.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/Helpers.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/ThumbnailGenerator.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/ViewModels/EditorViewModel.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/AudioMixerView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/ContentView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/EditorView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/ExportView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/FiltersView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/MediaPickerView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/ProjectsView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/SpeedControlView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/TextEditorView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/TimelineView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/ToolbarView.swift",
+        "/Users/lalitkhatri/FrameForge/FrameForge/Views/TransitionsView.swift"
+      ],
+      "tempsPath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "FrameForge" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "FrameForge",
+      "-package-name",
+      "frameforge",
+      "-c",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Engine/CompositionEngine.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Export/ExportPipeline.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/FrameForgeApp.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Models/Project.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Models/TimelineModels.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Models/VideoEffects.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/Helpers.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/ThumbnailGenerator.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/ViewModels/EditorViewModel.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/AudioMixerView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/ContentView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/EditorView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/ExportView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/FiltersView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/MediaPickerView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/ProjectsView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/SpeedControlView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/TextEditorView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/TimelineView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/ToolbarView.swift",
+      "/Users/lalitkhatri/FrameForge/FrameForge/Views/TransitionsView.swift",
+      "-I",
+      "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx10.13",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j14",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/include/FrameForge-Swift.h",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-target",
+      "arm64-apple-ios17.0-simulator",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "frameforge",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "FrameForge" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Engine/CompositionEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Export/ExportPipeline.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/FrameForgeApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/Project.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/TimelineModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Models/VideoEffects.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/Helpers.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Utilities/ThumbnailGenerator.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/ViewModels/EditorViewModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/AudioMixerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/EditorView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ExportView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/FiltersView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/MediaPickerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ProjectsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/SpeedControlView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TextEditorView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TimelineView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/ToolbarView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/lalitkhatri/FrameForge/FrameForge/Views/TransitionsView.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/FrameForge.build/sources"
+    },
+    "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/lalitkhatri/FrameForge/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}
