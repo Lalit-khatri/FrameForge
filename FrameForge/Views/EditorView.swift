@@ -105,10 +105,17 @@ struct EditorView: View {
                     if let player = viewModel.player {
                         ZStack {
                             Color.black
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.selectedVideoTrackIndex = nil
+                                    viewModel.selectedClipID = nil
+                                    viewModel.selectedStickerID = nil
+                                }
 
                             VideoPlayerView(player: player)
                                 .scaleEffect(viewModel.previewScale)
                                 .offset(viewModel.previewOffset)
+                                .allowsHitTesting(false)
 
                             videoTrackOverlayLayer
 
@@ -127,6 +134,7 @@ struct EditorView: View {
                         )
                         .contentShape(Rectangle())
                         .simultaneousGesture(
+                            viewModel.selectedVideoTrackIndex == nil ?
                             MagnifyGesture()
                                 .onChanged { value in
                                     viewModel.previewScale = max(1.0, min(3.0, value.magnification))
@@ -139,9 +147,10 @@ struct EditorView: View {
                                         }
                                     }
                                 }
+                            : nil
                         )
                         .simultaneousGesture(
-                            viewModel.previewScale > 1.0 ?
+                            viewModel.selectedVideoTrackIndex == nil && viewModel.previewScale > 1.0 ?
                             DragGesture()
                                 .onChanged { value in
                                     viewModel.previewOffset = value.translation
@@ -181,8 +190,6 @@ struct EditorView: View {
             }
             .frame(height: geo.size.height * 0.40)
             .clipped()
-
-            timeIndicatorBar
         }
         .contentShape(Rectangle())
         .zIndex(1)
@@ -234,81 +241,58 @@ struct EditorView: View {
                 let posX = textData.position.x * geo.size.width
                 let posY = textData.position.y * geo.size.height
 
-                Text(textData.text)
-                    .font(.custom(
-                        textData.fontName,
-                        size: textData.fontSize * 0.5 * textData.scale
-                    ))
-                    .foregroundColor(Color(
-                        red: textData.textColor.red,
-                        green: textData.textColor.green,
-                        blue: textData.textColor.blue,
-                        opacity: textData.textColor.alpha
-                    ))
-                    .padding(textData.backgroundColor != nil ? 8 : 0)
-                    .background(
-                        textData.backgroundColor != nil ?
-                        Color(
-                            red: textData.backgroundColor!.red,
-                            green: textData.backgroundColor!.green,
-                            blue: textData.backgroundColor!.blue,
-                            opacity: textData.backgroundColor!.alpha
-                        ) : Color.clear
-                    )
-                    .cornerRadius(6)
-                    .shadow(color: .black.opacity(0.5), radius: 3, x: 1, y: 1)
-                    .rotationEffect(.degrees(textData.rotation))
-                    .position(x: posX, y: posY)
-                    .overlay(
-                        clip.id == viewModel.selectedClipID ?
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color(red: 0.42, green: 0.36, blue: 0.91), lineWidth: 2)
-                            .padding(-4)
-                        : nil
-                    )
-                    .onTapGesture {
-                        viewModel.selectedClipID = clip.id
-                    }
-                    .gesture(
-                        clip.id == viewModel.selectedClipID ?
-                        DragGesture()
-                            .onChanged { value in
-                                let newX = value.location.x / geo.size.width
-                                let newY = value.location.y / geo.size.height
-                                let clampedX = max(0.05, min(0.95, newX))
-                                let clampedY = max(0.05, min(0.95, newY))
-                                viewModel.updateTextPosition(
-                                    trackIndex: item.trackIndex,
-                                    clipIndex: item.clipIndex,
-                                    position: CGPoint(x: clampedX, y: clampedY)
-                                )
-                            }
-                        : nil
-                    )
-                    .gesture(
-                        clip.id == viewModel.selectedClipID ?
-                        MagnifyGesture()
-                            .onChanged { value in
-                                viewModel.updateTextScale(
-                                    trackIndex: item.trackIndex,
-                                    clipIndex: item.clipIndex,
-                                    scale: textData.scale * value.magnification
-                                )
-                            }
-                        : nil
-                    )
-                    .gesture(
-                        clip.id == viewModel.selectedClipID ?
-                        RotateGesture()
-                            .onChanged { value in
-                                viewModel.updateTextRotation(
-                                    trackIndex: item.trackIndex,
-                                    clipIndex: item.clipIndex,
-                                    rotation: textData.rotation + value.rotation.degrees
-                                )
-                            }
-                        : nil
-                    )
+                let clipProgress = min(1.0, max(0, (viewModel.currentTime - clip.startTime) / max(0.1, clip.effectiveDuration)))
+                let animFraction = min(1.0, clipProgress * 4.0)
+
+                AnimatedTextView(
+                    textData: textData,
+                    animFraction: animFraction,
+                    isSelected: clip.id == viewModel.selectedClipID
+                )
+                .position(x: posX, y: posY)
+                .onTapGesture {
+                    viewModel.selectedClipID = clip.id
+                }
+                .gesture(
+                    clip.id == viewModel.selectedClipID ?
+                    DragGesture()
+                        .onChanged { value in
+                            let newX = value.location.x / geo.size.width
+                            let newY = value.location.y / geo.size.height
+                            let clampedX = max(0.05, min(0.95, newX))
+                            let clampedY = max(0.05, min(0.95, newY))
+                            viewModel.updateTextPosition(
+                                trackIndex: item.trackIndex,
+                                clipIndex: item.clipIndex,
+                                position: CGPoint(x: clampedX, y: clampedY)
+                            )
+                        }
+                    : nil
+                )
+                .gesture(
+                    clip.id == viewModel.selectedClipID ?
+                    MagnifyGesture()
+                        .onChanged { value in
+                            viewModel.updateTextScale(
+                                trackIndex: item.trackIndex,
+                                clipIndex: item.clipIndex,
+                                scale: textData.scale * value.magnification
+                            )
+                        }
+                    : nil
+                )
+                .gesture(
+                    clip.id == viewModel.selectedClipID ?
+                    RotateGesture()
+                        .onChanged { value in
+                            viewModel.updateTextRotation(
+                                trackIndex: item.trackIndex,
+                                clipIndex: item.clipIndex,
+                                rotation: textData.rotation + value.rotation.degrees
+                            )
+                        }
+                    : nil
+                )
             }
         }
     }
@@ -505,14 +489,74 @@ extension EditorView {
     @ViewBuilder
     private var videoTrackOverlayLayer: some View {
         GeometryReader { geo in
-            let overlayTracks = viewModel.videoTracks.filter { $0.index != viewModel.videoTracks.first?.index }
-            ForEach(overlayTracks, id: \.track.id) { item in
+            ForEach(viewModel.videoTracks, id: \.track.id) { item in
                 VideoLayerOverlayView(
                     item: item,
                     geoSize: geo.size,
                     viewModel: viewModel
                 )
             }
+        }
+    }
+}
+
+struct AnimatedTextView: View {
+    let textData: TextOverlayData
+    let animFraction: CGFloat
+    let isSelected: Bool
+
+    private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
+
+    var body: some View {
+        let textColor = Color(
+            red: textData.textColor.red,
+            green: textData.textColor.green,
+            blue: textData.textColor.blue,
+            opacity: textData.textColor.alpha
+        )
+        let bgColor: Color = {
+            if let bg = textData.backgroundColor {
+                return Color(red: bg.red, green: bg.green, blue: bg.blue, opacity: bg.alpha)
+            }
+            return .clear
+        }()
+
+        Text(textData.text)
+            .font(.custom(textData.fontName, size: textData.fontSize * 0.5 * textData.scale))
+            .foregroundColor(textColor)
+            .padding(textData.backgroundColor != nil ? 8 : 0)
+            .background(bgColor)
+            .cornerRadius(6)
+            .shadow(
+                color: textData.animationStyle == .glow
+                    ? textColor.opacity(Double(1.0 - animFraction) * 0.8)
+                    : .black.opacity(0.5),
+                radius: textData.animationStyle == .glow ? 10 * (1.0 - animFraction) + 3 : 3,
+                x: textData.animationStyle == .glow ? 0 : 1,
+                y: textData.animationStyle == .glow ? 0 : 1
+            )
+            .opacity(textData.animationStyle == .fadeIn ? Double(animFraction) : 1.0)
+            .offset(y: textData.animationStyle == .slideUp ? 30 * (1.0 - animFraction) : 0)
+            .scaleEffect(textData.animationStyle == .bounce ? bounceScale(animFraction) : 1.0)
+            .offset(y: textData.animationStyle == .wave ? sin(animFraction * .pi * 2) * 6 : 0)
+            .rotationEffect(.degrees(textData.rotation))
+            .overlay(
+                isSelected ?
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(accentColor, lineWidth: 2)
+                    .padding(-4)
+                : nil
+            )
+            .animation(.easeOut(duration: 0.3), value: animFraction)
+    }
+
+    private func bounceScale(_ t: CGFloat) -> CGFloat {
+        if t < 0.5 {
+            return 0.5 + t * 1.4
+        } else if t < 0.75 {
+            return 1.2 - (t - 0.5) * 0.8
+        } else {
+            return 1.0
         }
     }
 }
@@ -525,74 +569,133 @@ struct VideoLayerOverlayView: View {
     @GestureState private var dragOffset: CGSize = .zero
     @GestureState private var pinchMagnification: CGFloat = 1.0
     @GestureState private var rotationDelta: Angle = .zero
+    @State private var rotationHandleDrag: Angle = .zero
+    @State private var isDraggingRotation: Bool = false
+
+    private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
+    private let handleSize: CGFloat = 12
+    private let rotationHandleOffset: CGFloat = 30
 
     var body: some View {
         let transform = item.track.transform ?? .fullFrame
         let isSelected = viewModel.selectedVideoTrackIndex == item.index
+        let isFirstTrack = item.index == viewModel.videoTracks.first?.index
 
-        let currentScale = transform.scale * pinchMagnification
+        let currentScale = transform.scale * (isSelected ? pinchMagnification : 1.0)
         let boxW = geoSize.width * currentScale
         let boxH = geoSize.height * currentScale
 
-        let posX = transform.position.x * geoSize.width + dragOffset.width
-        let posY = transform.position.y * geoSize.height + dragOffset.height
+        let posX = transform.position.x * geoSize.width + (isSelected ? dragOffset.width : 0)
+        let posY = transform.position.y * geoSize.height + (isSelected ? dragOffset.height : 0)
 
-        let currentRotation = transform.rotation + rotationDelta.degrees
+        let currentRotation = transform.rotation + (isSelected ? rotationDelta.degrees + rotationHandleDrag.degrees : 0)
 
-        RoundedRectangle(cornerRadius: 6)
-            .fill(Color.clear)
-            .frame(width: boxW, height: boxH)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(
-                        isSelected
-                        ? Color(red: 0.42, green: 0.36, blue: 0.91)
-                        : Color.white.opacity(0.4),
-                        lineWidth: isSelected ? 2.5 : 1.5
-                    )
-            )
-            .overlay(alignment: .topLeading) {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.clear)
+                .frame(width: boxW, height: boxH)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(
+                            isSelected ? accentColor : Color.white.opacity(isFirstTrack ? 0 : 0.4),
+                            lineWidth: isSelected ? 2.5 : 1.5
+                        )
+                )
+                .overlay {
+                    if isSelected {
+                        ForEach(0..<4, id: \.self) { corner in
+                            Circle()
+                                .fill(accentColor)
+                                .frame(width: handleSize, height: handleSize)
+                                .shadow(color: .black.opacity(0.3), radius: 2)
+                                .offset(
+                                    x: corner % 2 == 0 ? -boxW / 2 : boxW / 2,
+                                    y: corner < 2 ? -boxH / 2 : boxH / 2
+                                )
+                        }
+                    }
+                }
+
+            if isSelected {
+                VStack(spacing: 0) {
+                    Circle()
+                        .fill(accentColor)
+                        .frame(width: 20, height: 20)
+                        .overlay(
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                        .shadow(color: .black.opacity(0.4), radius: 3)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    isDraggingRotation = true
+                                    let center = CGPoint(x: posX, y: posY)
+                                    let startAngle = atan2(
+                                        value.startLocation.y - center.y + posY - rotationHandleOffset - boxH / 2,
+                                        value.startLocation.x - center.x + posX
+                                    )
+                                    let currentAngle = atan2(
+                                        value.location.y - center.y + posY - rotationHandleOffset - boxH / 2,
+                                        value.location.x - center.x + posX
+                                    )
+                                    let delta = (currentAngle - startAngle) * 180 / .pi
+                                    rotationHandleDrag = .degrees(Double(delta))
+                                }
+                                .onEnded { _ in
+                                    let newRotation = transform.rotation + rotationHandleDrag.degrees
+                                    viewModel.updateTrackRotation(
+                                        trackIndex: item.index,
+                                        rotation: newRotation
+                                    )
+                                    rotationHandleDrag = .zero
+                                    isDraggingRotation = false
+                                    viewModel.saveProject()
+                                }
+                        )
+
+                    Rectangle()
+                        .fill(accentColor)
+                        .frame(width: 1.5, height: rotationHandleOffset - 10)
+
+                    Spacer()
+                }
+                .frame(width: 20, height: boxH / 2 + rotationHandleOffset)
+                .offset(y: -(boxH / 2 + rotationHandleOffset) / 2)
+            }
+
+            if !isSelected && !isFirstTrack {
                 Text("Layer \(item.index)")
                     .font(.system(size: 9, weight: .bold))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(
-                        isSelected
-                        ? Color(red: 0.42, green: 0.36, blue: 0.91)
-                        : Color.black.opacity(0.6)
-                    )
+                    .background(Color.black.opacity(0.6))
                     .foregroundColor(.white)
                     .cornerRadius(4)
-                    .offset(x: 4, y: 4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(4)
             }
-            .overlay {
-                if isSelected {
-                    ForEach(0..<4, id: \.self) { corner in
-                        Circle()
-                            .fill(Color(red: 0.42, green: 0.36, blue: 0.91))
-                            .frame(width: 10, height: 10)
-                            .offset(
-                                x: corner % 2 == 0 ? -boxW / 2 + 5 : boxW / 2 - 5,
-                                y: corner < 2 ? -boxH / 2 + 5 : boxH / 2 - 5
-                            )
-                    }
-                }
-            }
-            .rotationEffect(.degrees(currentRotation))
-            .position(x: posX, y: posY)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                viewModel.selectedVideoTrackIndex = item.index
-                viewModel.selectedClipID = nil
-                viewModel.selectedStickerID = nil
-            }
-            .gesture(
-                isSelected ?
-                DragGesture()
-                    .updating($dragOffset) { value, state, _ in
+        }
+        .rotationEffect(.degrees(currentRotation))
+        .position(x: posX, y: posY)
+        .contentShape(Rectangle())
+        .allowsHitTesting(!isFirstTrack || isSelected)
+        .onTapGesture {
+            viewModel.selectedVideoTrackIndex = item.index
+            viewModel.selectedClipID = nil
+            viewModel.selectedStickerID = nil
+        }
+        .gesture(
+            isSelected ?
+            DragGesture()
+                .updating($dragOffset) { value, state, _ in
+                    if !isDraggingRotation {
                         state = value.translation
                     }
-                    .onEnded { value in
+                }
+                .onEnded { value in
+                    if !isDraggingRotation {
                         let newX = transform.position.x + value.translation.width / geoSize.width
                         let newY = transform.position.y + value.translation.height / geoSize.height
                         let clampedX = max(0.0, min(1.0, newX))
@@ -603,39 +706,40 @@ struct VideoLayerOverlayView: View {
                         )
                         viewModel.saveProject()
                     }
-                : nil
-            )
-            .gesture(
-                isSelected ?
-                MagnifyGesture()
-                    .updating($pinchMagnification) { value, state, _ in
-                        state = value.magnification
-                    }
-                    .onEnded { value in
-                        let newScale = max(0.1, min(2.0, transform.scale * value.magnification))
-                        viewModel.updateTrackScale(
-                            trackIndex: item.index,
-                            scale: newScale
-                        )
-                        viewModel.saveProject()
-                    }
-                : nil
-            )
-            .gesture(
-                isSelected ?
-                RotateGesture()
-                    .updating($rotationDelta) { value, state, _ in
-                        state = value.rotation
-                    }
-                    .onEnded { value in
-                        let newRotation = transform.rotation + value.rotation.degrees
-                        viewModel.updateTrackRotation(
-                            trackIndex: item.index,
-                            rotation: newRotation
-                        )
-                        viewModel.saveProject()
-                    }
-                : nil
-            )
+                }
+            : nil
+        )
+        .simultaneousGesture(
+            isSelected ?
+            MagnifyGesture()
+                .updating($pinchMagnification) { value, state, _ in
+                    state = value.magnification
+                }
+                .onEnded { value in
+                    let newScale = max(0.1, min(2.0, transform.scale * value.magnification))
+                    viewModel.updateTrackScale(
+                        trackIndex: item.index,
+                        scale: newScale
+                    )
+                    viewModel.saveProject()
+                }
+            : nil
+        )
+        .simultaneousGesture(
+            isSelected ?
+            RotateGesture()
+                .updating($rotationDelta) { value, state, _ in
+                    state = value.rotation
+                }
+                .onEnded { value in
+                    let newRotation = transform.rotation + rotationDelta.degrees
+                    viewModel.updateTrackRotation(
+                        trackIndex: item.index,
+                        rotation: newRotation
+                    )
+                    viewModel.saveProject()
+                }
+            : nil
+        )
     }
 }

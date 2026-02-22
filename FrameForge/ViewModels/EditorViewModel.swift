@@ -79,6 +79,18 @@ final class EditorViewModel {
         return nil
     }
 
+    func selectClipFromTimeline(clipID: UUID, trackID: UUID) {
+        selectedClipID = clipID
+        selectedTrackID = trackID
+        selectedStickerID = nil
+        if let trackIdx = tracks.firstIndex(where: { $0.id == trackID }),
+           (tracks[trackIdx].type == .video || tracks[trackIdx].type == .overlay) {
+            selectedVideoTrackIndex = trackIdx
+        } else {
+            selectedVideoTrackIndex = nil
+        }
+    }
+
     var hasMedia: Bool {
         tracks.contains { !$0.clips.isEmpty }
     }
@@ -97,7 +109,7 @@ final class EditorViewModel {
 
     init() {
         tracks = [
-            TimelineTrack(type: .video),
+            TimelineTrack(type: .video, transform: .fullFrame),
             TimelineTrack(type: .audio),
         ]
     }
@@ -108,6 +120,9 @@ final class EditorViewModel {
         if let data = project.trackData {
             if let decoded = try? JSONDecoder().decode([TimelineTrack].self, from: data) {
                 tracks = decoded
+                for i in 0..<tracks.count where (tracks[i].type == .video || tracks[i].type == .overlay) && tracks[i].transform == nil {
+                    tracks[i].transform = .fullFrame
+                }
                 recalculateStartTimes()
                 Task { await rebuildComposition() }
             }

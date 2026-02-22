@@ -49,6 +49,7 @@ struct TimelineView: View {
         HStack(spacing: 8) {
             Slider(value: $viewModel.zoomScale, in: 0.2...5.0)
                 .tint(Color(red: 0.42, green: 0.36, blue: 0.91))
+                .frame(width: 120)
 
             Text("\(Int(viewModel.zoomScale * 100))%")
                 .font(.system(size: 10, design: .monospaced))
@@ -451,8 +452,7 @@ struct TimelineView: View {
         .offset(y: dragClipID == clip.id ? dragVerticalOffset : 0)
         .zIndex(dragClipID == clip.id ? 100 : 0)
         .onTapGesture {
-            viewModel.selectedClipID = clip.id
-            viewModel.selectedTrackID = track.id
+            viewModel.selectClipFromTimeline(clipID: clip.id, trackID: track.id)
             HapticManager.shared.selection()
         }
         .contextMenu {
