@@ -148,7 +148,6 @@ struct ProjectsView: View {
 
                     if let data = project.thumbnailData, let uiImage = UIImage(data: data) {
                         Image(uiImage: uiImage)
-                            .resizable()
                             .aspectRatio(contentMode: .fill)
                     } else {
                         Image(systemName: "film")
