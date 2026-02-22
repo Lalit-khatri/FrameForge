@@ -145,20 +145,20 @@ struct ProjectsView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.white.opacity(0.08))
-                        .aspectRatio(16/9, contentMode: .fit)
 
                     if let data = project.thumbnailData, let uiImage = UIImage(data: data) {
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .clipped()
-                            .cornerRadius(12)
                     } else {
                         Image(systemName: "film")
                             .font(.largeTitle)
                             .foregroundColor(.gray)
                     }
                 }
+                .aspectRatio(16/9, contentMode: .fit)
+                .clipped()
+                .cornerRadius(12)
 
                 Text(project.name)
                     .font(.subheadline.bold())
