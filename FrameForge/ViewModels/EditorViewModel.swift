@@ -23,7 +23,7 @@ final class EditorViewModel {
     var showCropTool = false
     var showStickerPicker = false
     var stickers: [StickerData] = []
-    var zoomScale: CGFloat = 1.0
+    var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()
     var exportProgress: Float = 0
     var isExporting = false
@@ -736,6 +736,33 @@ final class EditorViewModel {
     func updateStickerScale(id: UUID, scale: CGFloat) {
         guard let index = stickers.firstIndex(where: { $0.id == id }) else { return }
         stickers[index].scale = max(0.3, min(4.0, scale))
+    }
+
+    func updateStickerRotation(id: UUID, rotation: Double) {
+        guard let index = stickers.firstIndex(where: { $0.id == id }) else { return }
+        stickers[index].rotation = rotation
+    }
+
+    func moveClipInTrack(clipID: UUID, trackID: UUID, timeDelta: Double) {
+        guard let trackIdx = tracks.firstIndex(where: { $0.id == trackID }),
+              let clipIdx = tracks[trackIdx].clips.firstIndex(where: { $0.id == clipID }) else { return }
+        let newStart = max(0, tracks[trackIdx].clips[clipIdx].startTime + timeDelta)
+        tracks[trackIdx].clips[clipIdx].startTime = newStart
+        for i in (clipIdx + 1)..<tracks[trackIdx].clips.count {
+            let prevEnd = tracks[trackIdx].clips[i - 1].endTime
+            if tracks[trackIdx].clips[i].startTime < prevEnd {
+                tracks[trackIdx].clips[i].startTime = prevEnd
+            }
+        }
+        if clipIdx > 0 {
+            let prevEnd = tracks[trackIdx].clips[clipIdx - 1].endTime
+            if newStart < prevEnd {
+                tracks[trackIdx].clips[clipIdx].startTime = prevEnd
+            }
+        }
+        totalDuration = compositionEngine.getTotalDuration(for: tracks)
+        Task { await rebuildComposition() }
+        saveProject()
     }
 
     // MARK: - Crop

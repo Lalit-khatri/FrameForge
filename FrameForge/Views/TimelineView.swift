@@ -13,6 +13,8 @@ struct TimelineView: View {
     @State private var scrubAccumulated: CGFloat = 0
     @State private var showTransitionPicker: Bool = false
     @State private var transitionClipID: UUID?
+    @State private var horizontalDragClipID: UUID?
+    @State private var horizontalDragOffset: CGFloat = 0
     @State private var transitionTrackID: UUID?
 
     private let trackHeight: CGFloat = 52
@@ -47,7 +49,7 @@ struct TimelineView: View {
 
     private var zoomBar: some View {
         HStack(spacing: 8) {
-            Slider(value: $viewModel.zoomScale, in: 0.2...5.0)
+            Slider(value: $viewModel.zoomScale, in: 0.1...5.0)
                 .tint(Color(red: 0.42, green: 0.36, blue: 0.91))
                 .frame(width: 120)
 
@@ -260,16 +262,27 @@ struct TimelineView: View {
                 }
             }
 
-            HStack(spacing: 0) {
-                ForEach(Array(track.clips.enumerated()), id: \.element.id) { idx, clip in
-                    clipView(clip, track: track)
+            ForEach(Array(track.clips.enumerated()), id: \.element.id) { idx, clip in
+                let clipWidth = max(36, clip.effectiveDuration * Double(scaledPixelsPerSecond))
+                let xOffset = clip.startTime * Double(scaledPixelsPerSecond)
+                    + (horizontalDragClipID == clip.id ? Double(horizontalDragOffset) : 0)
 
-                    if idx < track.clips.count - 1 {
-                        transitionButton(
-                            clip: clip,
-                            nextClip: track.clips[idx + 1],
-                            track: track
-                        )
+                clipView(clip, track: track)
+                    .offset(x: xOffset)
+                    .transaction { t in
+                        if horizontalDragClipID == clip.id {
+                            t.animation = nil
+                        }
+                    }
+
+                if idx < track.clips.count - 1 {
+                    let nextClip = track.clips[idx + 1]
+                    let gap = abs(nextClip.startTime - clip.endTime)
+                    if gap < 0.01 {
+                        let junctionX = clip.endTime * Double(scaledPixelsPerSecond)
+                        transitionButton(clip: clip, nextClip: nextClip, track: track)
+                            .offset(x: junctionX - 10)
+                            .zIndex(50)
                     }
                 }
             }
@@ -467,6 +480,23 @@ struct TimelineView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+        .gesture(
+            viewModel.selectedClipID == clip.id ?
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in
+                    if horizontalDragClipID == nil {
+                        horizontalDragClipID = clip.id
+                    }
+                    horizontalDragOffset = value.translation.width
+                }
+                .onEnded { value in
+                    let timeDelta = Double(value.translation.width) / Double(scaledPixelsPerSecond)
+                    viewModel.moveClipInTrack(clipID: clip.id, trackID: track.id, timeDelta: timeDelta)
+                    horizontalDragClipID = nil
+                    horizontalDragOffset = 0
+                }
+            : nil
+        )
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 0.3)
                 .sequenced(before: DragGesture())

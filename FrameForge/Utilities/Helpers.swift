@@ -3,6 +3,7 @@ import UIKit
 
 struct TimeFormatter {
     static func format(seconds: Double) -> String {
+        guard seconds.isFinite else { return "00:00.00" }
         let totalSeconds = Int(max(0, seconds))
         let minutes = totalSeconds / 60
         let secs = totalSeconds % 60
@@ -11,6 +12,7 @@ struct TimeFormatter {
     }
 
     static func formatSimple(seconds: Double) -> String {
+        guard seconds.isFinite else { return "0:00" }
         let totalSeconds = Int(max(0, seconds))
         let minutes = totalSeconds / 60
         let secs = totalSeconds % 60
