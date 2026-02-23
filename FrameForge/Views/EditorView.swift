@@ -134,23 +134,60 @@ struct EditorView: View {
                         )
                         .contentShape(Rectangle())
                         .simultaneousGesture(
-                            viewModel.selectedVideoTrackIndex == nil ?
                             MagnifyGesture()
                                 .onChanged { value in
-                                    viewModel.previewScale = max(1.0, min(3.0, value.magnification))
+                                    if let videoIdx = viewModel.selectedVideoTrackIndex {
+                                        let currentScale = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.scale ?? 1.0
+                                        viewModel.updateTrackScale(trackIndex: videoIdx, scale: currentScale * value.magnification)
+                                    } else if let clipID = viewModel.selectedClipID {
+                                        if let item = viewModel.activeTextOverlays.first(where: { $0.clip.id == clipID }),
+                                           let textData = item.clip.textOverlay {
+                                            viewModel.updateTextScale(trackIndex: item.trackIndex, clipIndex: item.clipIndex, scale: textData.scale * value.magnification)
+                                        }
+                                    } else if let stickerID = viewModel.selectedStickerID {
+                                        if let sticker = viewModel.stickers.first(where: { $0.id == stickerID }) {
+                                            viewModel.updateStickerScale(id: stickerID, scale: sticker.scale * value.magnification)
+                                        }
+                                    } else {
+                                        viewModel.previewScale = max(1.0, min(3.0, value.magnification))
+                                    }
                                 }
                                 .onEnded { value in
-                                    if viewModel.previewScale < 1.05 {
-                                        withAnimation(.spring(response: 0.3)) {
-                                            viewModel.previewScale = 1.0
-                                            viewModel.previewOffset = .zero
+                                    if viewModel.selectedVideoTrackIndex == nil && viewModel.selectedClipID == nil && viewModel.selectedStickerID == nil {
+                                        if viewModel.previewScale < 1.05 {
+                                            withAnimation(.spring(response: 0.3)) {
+                                                viewModel.previewScale = 1.0
+                                                viewModel.previewOffset = .zero
+                                            }
+                                        }
+                                    } else {
+                                        viewModel.saveProject()
+                                    }
+                                }
+                        )
+                        .simultaneousGesture(
+                            RotateGesture()
+                                .onChanged { value in
+                                    if let videoIdx = viewModel.selectedVideoTrackIndex {
+                                        let currentRot = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.rotation ?? 0
+                                        viewModel.updateTrackRotation(trackIndex: videoIdx, rotation: currentRot + value.rotation.degrees)
+                                    } else if let clipID = viewModel.selectedClipID {
+                                        if let item = viewModel.activeTextOverlays.first(where: { $0.clip.id == clipID }),
+                                           let textData = item.clip.textOverlay {
+                                            viewModel.updateTextRotation(trackIndex: item.trackIndex, clipIndex: item.clipIndex, rotation: textData.rotation + value.rotation.degrees)
+                                        }
+                                    } else if let stickerID = viewModel.selectedStickerID {
+                                        if let sticker = viewModel.stickers.first(where: { $0.id == stickerID }) {
+                                            viewModel.updateStickerRotation(id: stickerID, rotation: sticker.rotation + value.rotation.degrees)
                                         }
                                     }
                                 }
-                            : nil
+                                .onEnded { _ in
+                                    viewModel.saveProject()
+                                }
                         )
                         .simultaneousGesture(
-                            viewModel.selectedVideoTrackIndex == nil && viewModel.previewScale > 1.0 ?
+                            viewModel.selectedVideoTrackIndex == nil && viewModel.selectedClipID == nil && viewModel.selectedStickerID == nil && viewModel.previewScale > 1.0 ?
                             DragGesture()
                                 .onChanged { value in
                                     viewModel.previewOffset = value.translation
@@ -243,56 +280,44 @@ struct EditorView: View {
 
                 let clipProgress = min(1.0, max(0, (viewModel.currentTime - clip.startTime) / max(0.1, clip.effectiveDuration)))
                 let animFraction = min(1.0, clipProgress * 4.0)
+                let isSelected = clip.id == viewModel.selectedClipID
 
-                AnimatedTextView(
+                TextOverlayWithRotation(
                     textData: textData,
                     animFraction: animFraction,
-                    isSelected: clip.id == viewModel.selectedClipID
+                    isSelected: isSelected,
+                    onTap: {
+                        viewModel.selectedClipID = clip.id
+                        viewModel.selectedVideoTrackIndex = nil
+                        viewModel.selectedStickerID = nil
+                    },
+                    onDrag: isSelected ? { value in
+                        let newX = value.location.x / geo.size.width
+                        let newY = value.location.y / geo.size.height
+                        let clampedX = max(0.05, min(0.95, newX))
+                        let clampedY = max(0.05, min(0.95, newY))
+                        viewModel.updateTextPosition(
+                            trackIndex: item.trackIndex,
+                            clipIndex: item.clipIndex,
+                            position: CGPoint(x: clampedX, y: clampedY)
+                        )
+                    } : nil,
+                    onScale: isSelected ? { mag in
+                        viewModel.updateTextScale(
+                            trackIndex: item.trackIndex,
+                            clipIndex: item.clipIndex,
+                            scale: textData.scale * mag
+                        )
+                    } : nil,
+                    onRotationChanged: isSelected ? { rot in
+                        viewModel.updateTextRotation(
+                            trackIndex: item.trackIndex,
+                            clipIndex: item.clipIndex,
+                            rotation: rot
+                        )
+                    } : nil
                 )
                 .position(x: posX, y: posY)
-                .onTapGesture {
-                    viewModel.selectedClipID = clip.id
-                }
-                .gesture(
-                    clip.id == viewModel.selectedClipID ?
-                    DragGesture()
-                        .onChanged { value in
-                            let newX = value.location.x / geo.size.width
-                            let newY = value.location.y / geo.size.height
-                            let clampedX = max(0.05, min(0.95, newX))
-                            let clampedY = max(0.05, min(0.95, newY))
-                            viewModel.updateTextPosition(
-                                trackIndex: item.trackIndex,
-                                clipIndex: item.clipIndex,
-                                position: CGPoint(x: clampedX, y: clampedY)
-                            )
-                        }
-                    : nil
-                )
-                .gesture(
-                    clip.id == viewModel.selectedClipID ?
-                    MagnifyGesture()
-                        .onChanged { value in
-                            viewModel.updateTextScale(
-                                trackIndex: item.trackIndex,
-                                clipIndex: item.clipIndex,
-                                scale: textData.scale * value.magnification
-                            )
-                        }
-                    : nil
-                )
-                .gesture(
-                    clip.id == viewModel.selectedClipID ?
-                    RotateGesture()
-                        .onChanged { value in
-                            viewModel.updateTextRotation(
-                                trackIndex: item.trackIndex,
-                                clipIndex: item.clipIndex,
-                                rotation: textData.rotation + value.rotation.degrees
-                            )
-                        }
-                    : nil
-                )
             }
         }
     }
@@ -428,60 +453,51 @@ extension EditorView {
     var stickerOverlayLayer: some View {
         GeometryReader { geo in
             ForEach(viewModel.stickers) { sticker in
-                Text(sticker.emoji)
-                    .font(.system(size: 48 * sticker.scale))
-                    .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
-                    .position(
-                        x: sticker.position.x * geo.size.width,
-                        y: sticker.position.y * geo.size.height
-                    )
-                    .overlay(
-                        viewModel.selectedStickerID == sticker.id ?
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color(red: 0.42, green: 0.36, blue: 0.91), lineWidth: 2)
-                            .padding(-4)
-                        : nil
-                    )
-                    .onTapGesture {
+                let isSelected = viewModel.selectedStickerID == sticker.id
+                StickerOverlayWithRotation(
+                    sticker: sticker,
+                    geoSize: geo.size,
+                    isSelected: isSelected,
+                    onTap: {
                         viewModel.selectedStickerID = sticker.id
                         viewModel.selectedClipID = nil
                         viewModel.selectedVideoTrackIndex = nil
-                    }
-                    .gesture(
-                        viewModel.selectedStickerID == sticker.id ?
-                        DragGesture()
-                            .onChanged { value in
-                                let newX = value.location.x / geo.size.width
-                                let newY = value.location.y / geo.size.height
-                                let clampedX = max(0.05, min(0.95, newX))
-                                let clampedY = max(0.05, min(0.95, newY))
-                                viewModel.updateStickerPosition(
-                                    id: sticker.id,
-                                    position: CGPoint(x: clampedX, y: clampedY)
-                                )
-                            }
-                            .onEnded { _ in
-                                viewModel.saveProject()
-                            }
-                        : nil
-                    )
-                    .gesture(
-                        viewModel.selectedStickerID == sticker.id ?
-                        MagnifyGesture()
-                            .onChanged { value in
-                                viewModel.updateStickerScale(
-                                    id: sticker.id,
-                                    scale: sticker.scale * value.magnification
-                                )
-                            }
-                            .onEnded { _ in
-                                viewModel.saveProject()
-                            }
-                        : nil
-                    )
-                    .onTapGesture(count: 2) {
+                    },
+                    onDrag: isSelected ? { value in
+                        let newX = value.location.x / geo.size.width
+                        let newY = value.location.y / geo.size.height
+                        let clampedX = max(0.05, min(0.95, newX))
+                        let clampedY = max(0.05, min(0.95, newY))
+                        viewModel.updateStickerPosition(
+                            id: sticker.id,
+                            position: CGPoint(x: clampedX, y: clampedY)
+                        )
+                    } : nil,
+                    onDragEnd: {
+                        viewModel.saveProject()
+                    },
+                    onScale: isSelected ? { mag in
+                        viewModel.updateStickerScale(
+                            id: sticker.id,
+                            scale: sticker.scale * mag
+                        )
+                    } : nil,
+                    onScaleEnd: {
+                        viewModel.saveProject()
+                    },
+                    onRotationChanged: isSelected ? { rot in
+                        viewModel.updateStickerRotation(
+                            id: sticker.id,
+                            rotation: rot
+                        )
+                    } : nil,
+                    onRotationEnd: {
+                        viewModel.saveProject()
+                    },
+                    onDoubleTap: {
                         viewModel.removeSticker(id: sticker.id)
                     }
+                )
             }
         }
     }
@@ -539,14 +555,6 @@ struct AnimatedTextView: View {
             .offset(y: textData.animationStyle == .slideUp ? 30 * (1.0 - animFraction) : 0)
             .scaleEffect(textData.animationStyle == .bounce ? bounceScale(animFraction) : 1.0)
             .offset(y: textData.animationStyle == .wave ? sin(animFraction * .pi * 2) * 6 : 0)
-            .rotationEffect(.degrees(textData.rotation))
-            .overlay(
-                isSelected ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(accentColor, lineWidth: 2)
-                    .padding(-4)
-                : nil
-            )
             .animation(.easeOut(duration: 0.3), value: animFraction)
     }
 
@@ -558,6 +566,180 @@ struct AnimatedTextView: View {
         } else {
             return 1.0
         }
+    }
+}
+
+struct TextOverlayWithRotation: View {
+    let textData: TextOverlayData
+    let animFraction: CGFloat
+    let isSelected: Bool
+    var onTap: () -> Void
+    var onDrag: ((DragGesture.Value) -> Void)?
+    var onScale: ((CGFloat) -> Void)?
+    var onRotationChanged: ((Double) -> Void)?
+
+    @State private var rotationHandleDrag: Angle = .zero
+    @State private var isDraggingRotation: Bool = false
+
+    private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
+    private let rotationHandleOffset: CGFloat = 30
+
+    var body: some View {
+        let currentRotation = textData.rotation + rotationHandleDrag.degrees
+
+        ZStack {
+            AnimatedTextView(
+                textData: textData,
+                animFraction: animFraction,
+                isSelected: isSelected
+            )
+            .overlay(
+                isSelected ?
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(accentColor, lineWidth: 2)
+                    .padding(-4)
+                : nil
+            )
+
+            if isSelected {
+                VStack(spacing: 0) {
+                    Circle()
+                        .fill(accentColor)
+                        .frame(width: 20, height: 20)
+                        .overlay(
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                        .shadow(color: .black.opacity(0.4), radius: 3)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    isDraggingRotation = true
+                                    let delta = atan2(value.translation.width, -value.translation.height)
+                                    rotationHandleDrag = .radians(Double(delta))
+                                }
+                                .onEnded { _ in
+                                    let newRotation = textData.rotation + rotationHandleDrag.degrees
+                                    onRotationChanged?(newRotation)
+                                    rotationHandleDrag = .zero
+                                    isDraggingRotation = false
+                                }
+                        )
+
+                    Rectangle()
+                        .fill(accentColor)
+                        .frame(width: 1.5, height: rotationHandleOffset - 10)
+                }
+                .offset(y: -rotationHandleOffset - 10)
+            }
+        }
+        .rotationEffect(.degrees(currentRotation))
+        .onTapGesture { onTap() }
+        .gesture(
+            onDrag != nil && !isDraggingRotation ?
+            DragGesture()
+                .onChanged { value in onDrag?(value) }
+            : nil
+        )
+        .simultaneousGesture(
+            onScale != nil ?
+            MagnifyGesture()
+                .onChanged { value in onScale?(value.magnification) }
+            : nil
+        )
+    }
+}
+
+struct StickerOverlayWithRotation: View {
+    let sticker: StickerData
+    let geoSize: CGSize
+    let isSelected: Bool
+    var onTap: () -> Void
+    var onDrag: ((DragGesture.Value) -> Void)?
+    var onDragEnd: (() -> Void)?
+    var onScale: ((CGFloat) -> Void)?
+    var onScaleEnd: (() -> Void)?
+    var onRotationChanged: ((Double) -> Void)?
+    var onRotationEnd: (() -> Void)?
+    var onDoubleTap: () -> Void
+
+    @State private var rotationHandleDrag: Angle = .zero
+    @State private var isDraggingRotation: Bool = false
+
+    private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
+    private let rotationHandleOffset: CGFloat = 30
+
+    var body: some View {
+        let currentRotation = sticker.rotation + rotationHandleDrag.degrees
+
+        ZStack {
+            Text(sticker.emoji)
+                .font(.system(size: 48 * sticker.scale))
+                .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
+                .overlay(
+                    isSelected ?
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(accentColor, lineWidth: 2)
+                        .padding(-4)
+                    : nil
+                )
+
+            if isSelected {
+                VStack(spacing: 0) {
+                    Circle()
+                        .fill(accentColor)
+                        .frame(width: 20, height: 20)
+                        .overlay(
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                        .shadow(color: .black.opacity(0.4), radius: 3)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    isDraggingRotation = true
+                                    let delta = atan2(value.translation.width, -value.translation.height)
+                                    rotationHandleDrag = .radians(Double(delta))
+                                }
+                                .onEnded { _ in
+                                    let newRotation = sticker.rotation + rotationHandleDrag.degrees
+                                    onRotationChanged?(newRotation)
+                                    rotationHandleDrag = .zero
+                                    isDraggingRotation = false
+                                    onRotationEnd?()
+                                }
+                        )
+
+                    Rectangle()
+                        .fill(accentColor)
+                        .frame(width: 1.5, height: rotationHandleOffset - 10)
+                }
+                .offset(y: -rotationHandleOffset - 20)
+            }
+        }
+        .rotationEffect(.degrees(currentRotation))
+        .position(
+            x: sticker.position.x * geoSize.width,
+            y: sticker.position.y * geoSize.height
+        )
+        .onTapGesture { onTap() }
+        .onTapGesture(count: 2) { onDoubleTap() }
+        .gesture(
+            onDrag != nil && !isDraggingRotation ?
+            DragGesture()
+                .onChanged { value in onDrag?(value) }
+                .onEnded { _ in onDragEnd?() }
+            : nil
+        )
+        .simultaneousGesture(
+            onScale != nil ?
+            MagnifyGesture()
+                .onChanged { value in onScale?(value.magnification) }
+                .onEnded { _ in onScaleEnd?() }
+            : nil
+        )
     }
 }
 
