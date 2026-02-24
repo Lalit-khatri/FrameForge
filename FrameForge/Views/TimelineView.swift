@@ -15,6 +15,7 @@ struct TimelineView: View {
     @State private var transitionClipID: UUID?
     @State private var horizontalDragClipID: UUID?
     @State private var horizontalDragOffset: CGFloat = 0
+    @State private var lastDragX: CGFloat = 0
     @State private var transitionTrackID: UUID?
 
     private let trackHeight: CGFloat = 52
@@ -84,7 +85,7 @@ struct TimelineView: View {
     private var fixedPlayheadTimeline: some View {
         GeometryReader { geo in
             let fullWidth = geo.size.width
-            let totalWidth = max(contentDuration * Double(scaledPixelsPerSecond), Double(fullWidth))
+            let totalWidth = min(16000, max(contentDuration * Double(scaledPixelsPerSecond), Double(fullWidth)))
             let playheadTimeOffset = CGFloat(viewModel.currentTime) * scaledPixelsPerSecond
 
             ZStack(alignment: .leading) {
@@ -161,12 +162,13 @@ struct TimelineView: View {
                 handleTrackLabelAction(track)
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(.system(size: 9, weight: .bold))
                     .foregroundColor(.white)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 20, height: 20)
                     .background(config.color.opacity(0.8))
                     .clipShape(Circle())
             }
+            .contentShape(Rectangle().size(width: 30, height: 30))
             .offset(x: -2, y: -2)
         }
     }
@@ -193,13 +195,13 @@ struct TimelineView: View {
     private func handleTrackLabelAction(_ track: TimelineTrack) {
         switch track.type {
         case .video:
-            onAddMedia?()
+            viewModel.showMediaPicker = true
         case .audio:
             viewModel.showAudioBrowser = true
         case .text:
-            viewModel.addTextOverlay(TextOverlayData())
+            viewModel.showTextEditor = true
         case .overlay:
-            onAddMedia?()
+            viewModel.showStickerPicker = true
         }
     }
 
@@ -243,11 +245,7 @@ struct TimelineView: View {
 
             if track.clips.isEmpty {
                 Button {
-                    if track.type == .video {
-                        onAddMedia?()
-                    } else {
-                        handleTrackLabelAction(track)
-                    }
+                     handleTrackLabelAction(track)
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus.circle")
@@ -265,15 +263,9 @@ struct TimelineView: View {
             ForEach(Array(track.clips.enumerated()), id: \.element.id) { idx, clip in
                 let clipWidth = max(36, clip.effectiveDuration * Double(scaledPixelsPerSecond))
                 let xOffset = clip.startTime * Double(scaledPixelsPerSecond)
-                    + (horizontalDragClipID == clip.id ? Double(horizontalDragOffset) : 0)
 
                 clipView(clip, track: track)
                     .offset(x: xOffset)
-                    .transaction { t in
-                        if horizontalDragClipID == clip.id {
-                            t.animation = nil
-                        }
-                    }
 
                 if idx < track.clips.count - 1 {
                     let nextClip = track.clips[idx + 1]
@@ -388,7 +380,7 @@ struct TimelineView: View {
     // MARK: - Clip View
 
     private func clipView(_ clip: TimelineClip, track: TimelineTrack) -> some View {
-        let clipWidth = max(36, clip.effectiveDuration * Double(scaledPixelsPerSecond))
+        let clipWidth = min(16000, max(36, clip.effectiveDuration * Double(scaledPixelsPerSecond)))
         let isSelected = clip.id == viewModel.selectedClipID
         let clipColor = colorForTrackType(track.type)
 
@@ -480,23 +472,6 @@ struct TimelineView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-        .gesture(
-            viewModel.selectedClipID == clip.id ?
-            DragGesture(minimumDistance: 5)
-                .onChanged { value in
-                    if horizontalDragClipID == nil {
-                        horizontalDragClipID = clip.id
-                    }
-                    horizontalDragOffset = value.translation.width
-                }
-                .onEnded { value in
-                    let timeDelta = Double(value.translation.width) / Double(scaledPixelsPerSecond)
-                    viewModel.moveClipInTrack(clipID: clip.id, trackID: track.id, timeDelta: timeDelta)
-                    horizontalDragClipID = nil
-                    horizontalDragOffset = 0
-                }
-            : nil
-        )
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 0.3)
                 .sequenced(before: DragGesture())
@@ -506,10 +481,18 @@ struct TimelineView: View {
                         if dragClipID == nil {
                             dragClipID = clip.id
                             dragSourceTrackID = track.id
+                            lastDragX = 0
                             HapticManager.shared.medium()
                         }
                         if let drag = drag {
                             dragVerticalOffset = drag.translation.height
+                            let currentX = drag.translation.width
+                            let deltaX = currentX - lastDragX
+                            if abs(deltaX) > 1 {
+                                let timeDelta = Double(deltaX) / Double(scaledPixelsPerSecond)
+                                viewModel.moveClipInTrack(clipID: clip.id, trackID: track.id, timeDelta: timeDelta, persist: false)
+                                lastDragX = currentX
+                            }
                         }
                     default:
                         break
@@ -520,7 +503,9 @@ struct TimelineView: View {
                         resetDragState()
                         return
                     }
+
                     let trackOffset = Int(round(dragVerticalOffset / (trackHeight + 1)))
+
                     if trackOffset != 0,
                        let sourceIdx = viewModel.tracks.firstIndex(where: { $0.id == sourceTrackID }) {
                         let targetIdx = sourceIdx + trackOffset
@@ -533,7 +518,10 @@ struct TimelineView: View {
                             )
                         }
                     }
+
+                    viewModel.saveProject()
                     resetDragState()
+                    lastDragX = 0
                 }
         )
     }

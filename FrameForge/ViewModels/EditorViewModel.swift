@@ -82,12 +82,24 @@ final class EditorViewModel {
     func selectClipFromTimeline(clipID: UUID, trackID: UUID) {
         selectedClipID = clipID
         selectedTrackID = trackID
-        selectedStickerID = nil
-        if let trackIdx = tracks.firstIndex(where: { $0.id == trackID }),
-           (tracks[trackIdx].type == .video || tracks[trackIdx].type == .overlay) {
-            selectedVideoTrackIndex = trackIdx
+        if let trackIdx = tracks.firstIndex(where: { $0.id == trackID }) {
+            if tracks[trackIdx].type == .overlay {
+                if let linkedSticker = stickers.first(where: { $0.clipID == clipID }) {
+                    selectedStickerID = linkedSticker.id
+                } else {
+                    selectedStickerID = nil
+                }
+                selectedVideoTrackIndex = nil
+            } else if tracks[trackIdx].type == .video {
+                selectedVideoTrackIndex = trackIdx
+                selectedStickerID = nil
+            } else {
+                selectedVideoTrackIndex = nil
+                selectedStickerID = nil
+            }
         } else {
             selectedVideoTrackIndex = nil
+            selectedStickerID = nil
         }
     }
 
@@ -703,18 +715,20 @@ final class EditorViewModel {
 
     // MARK: - Stickers
 
-    func addSticker(emoji: String) {
+    func addSticker(emoji: String, gifURL: String? = nil) {
         saveState()
-        let sticker = StickerData(emoji: emoji)
+        let dur = totalDuration > 0 ? totalDuration : 10.0
+        let stickerClip = TimelineClip(
+            assetURL: nil,
+            startTime: 0,
+            duration: dur
+        )
+        var sticker = StickerData(emoji: emoji, gifURL: gifURL, startTime: 0, duration: dur)
+        sticker.clipID = stickerClip.id
         stickers.append(sticker)
         selectedStickerID = sticker.id
 
         var stickerTrack = TimelineTrack(type: .overlay)
-        let stickerClip = TimelineClip(
-            assetURL: nil,
-            startTime: 0,
-            duration: totalDuration > 0 ? totalDuration : 10
-        )
         stickerTrack.clips.append(stickerClip)
         tracks.append(stickerTrack)
 
@@ -743,26 +757,31 @@ final class EditorViewModel {
         stickers[index].rotation = rotation
     }
 
-    func moveClipInTrack(clipID: UUID, trackID: UUID, timeDelta: Double) {
+    func moveClipInTrack(clipID: UUID, trackID: UUID, timeDelta: Double, persist: Bool = true) {
         guard let trackIdx = tracks.firstIndex(where: { $0.id == trackID }),
               let clipIdx = tracks[trackIdx].clips.firstIndex(where: { $0.id == clipID }) else { return }
-        let newStart = max(0, tracks[trackIdx].clips[clipIdx].startTime + timeDelta)
+
+        var newStart = max(0, tracks[trackIdx].clips[clipIdx].startTime + timeDelta)
+        let clipDuration = tracks[trackIdx].clips[clipIdx].effectiveDuration
+
+        if clipIdx > 0 {
+            let prevEnd = tracks[trackIdx].clips[clipIdx - 1].endTime
+            newStart = max(newStart, prevEnd)
+        }
+
         tracks[trackIdx].clips[clipIdx].startTime = newStart
+
         for i in (clipIdx + 1)..<tracks[trackIdx].clips.count {
             let prevEnd = tracks[trackIdx].clips[i - 1].endTime
             if tracks[trackIdx].clips[i].startTime < prevEnd {
                 tracks[trackIdx].clips[i].startTime = prevEnd
             }
         }
-        if clipIdx > 0 {
-            let prevEnd = tracks[trackIdx].clips[clipIdx - 1].endTime
-            if newStart < prevEnd {
-                tracks[trackIdx].clips[clipIdx].startTime = prevEnd
-            }
-        }
+
         totalDuration = compositionEngine.getTotalDuration(for: tracks)
-        Task { await rebuildComposition() }
-        saveProject()
+        if persist {
+            saveProject()
+        }
     }
 
     // MARK: - Crop

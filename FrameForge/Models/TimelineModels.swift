@@ -206,16 +206,24 @@ enum EffectType: String, Codable, CaseIterable {
 struct StickerData: Codable, Identifiable {
     let id: UUID
     var emoji: String
+    var gifURL: String?
     var position: CGPoint
     var scale: CGFloat
     var rotation: Double
+    var startTime: Double
+    var duration: Double
+    var clipID: UUID?
 
-    init(emoji: String, position: CGPoint = CGPoint(x: 0.5, y: 0.5)) {
+    init(emoji: String, gifURL: String? = nil, position: CGPoint = CGPoint(x: 0.5, y: 0.5), startTime: Double = 0, duration: Double = 10) {
         self.id = UUID()
         self.emoji = emoji
+        self.gifURL = gifURL
         self.position = position
         self.scale = 1.0
         self.rotation = 0
+        self.startTime = startTime
+        self.duration = duration
+        self.clipID = nil
     }
 }
 

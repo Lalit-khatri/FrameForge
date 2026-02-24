@@ -255,7 +255,7 @@ struct StickersView: View {
                             }
                         }
                         .onTapGesture {
-                            viewModel.addSticker(emoji: "🎬")
+                            viewModel.addSticker(emoji: gif.contentDescription, gifURL: gif.previewURL)
                             HapticManager.shared.medium()
                             dismiss()
                         }
