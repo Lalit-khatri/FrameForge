@@ -1,12 +1,14 @@
 import SwiftUI
 import AVFoundation
+import ImageIO
 
 struct EditorView: View {
     let project: Project
     var onDismiss: () -> Void
 
     @State private var viewModel = EditorViewModel()
-    @State private var showMediaPicker = false
+    @State private var pinchBaseScale: CGFloat?
+    @State private var rotateBaseAngle: Double?
 
     var body: some View {
         GeometryReader { geo in
@@ -15,7 +17,7 @@ struct EditorView: View {
                     .zIndex(10)
                 previewSection(geo: geo)
                 playbackControls
-                TimelineView(viewModel: viewModel, onAddMedia: { showMediaPicker = true })
+                TimelineView(viewModel: viewModel)
                     .frame(maxHeight: .infinity)
                 toolbarSection
                     .padding(.bottom, geo.safeAreaInsets.bottom)
@@ -24,7 +26,7 @@ struct EditorView: View {
             .ignoresSafeArea(.container, edges: .bottom)
         }
         .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showMediaPicker) {
+        .sheet(isPresented: $viewModel.showMediaPicker) {
             MediaPickerView(viewModel: viewModel)
         }
         .sheet(isPresented: $viewModel.showExportSheet) {
@@ -137,22 +139,31 @@ struct EditorView: View {
                             MagnifyGesture()
                                 .onChanged { value in
                                     if let videoIdx = viewModel.selectedVideoTrackIndex {
-                                        let currentScale = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.scale ?? 1.0
-                                        viewModel.updateTrackScale(trackIndex: videoIdx, scale: currentScale * value.magnification)
+                                        if pinchBaseScale == nil {
+                                            pinchBaseScale = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.scale ?? 1.0
+                                        }
+                                        viewModel.updateTrackScale(trackIndex: videoIdx, scale: (pinchBaseScale ?? 1.0) * value.magnification)
                                     } else if let clipID = viewModel.selectedClipID {
                                         if let item = viewModel.activeTextOverlays.first(where: { $0.clip.id == clipID }),
                                            let textData = item.clip.textOverlay {
-                                            viewModel.updateTextScale(trackIndex: item.trackIndex, clipIndex: item.clipIndex, scale: textData.scale * value.magnification)
+                                            if pinchBaseScale == nil {
+                                                pinchBaseScale = textData.scale
+                                            }
+                                            viewModel.updateTextScale(trackIndex: item.trackIndex, clipIndex: item.clipIndex, scale: (pinchBaseScale ?? 1.0) * value.magnification)
                                         }
                                     } else if let stickerID = viewModel.selectedStickerID {
                                         if let sticker = viewModel.stickers.first(where: { $0.id == stickerID }) {
-                                            viewModel.updateStickerScale(id: stickerID, scale: sticker.scale * value.magnification)
+                                            if pinchBaseScale == nil {
+                                                pinchBaseScale = sticker.scale
+                                            }
+                                            viewModel.updateStickerScale(id: stickerID, scale: (pinchBaseScale ?? 1.0) * value.magnification)
                                         }
                                     } else {
                                         viewModel.previewScale = max(1.0, min(3.0, value.magnification))
                                     }
                                 }
                                 .onEnded { value in
+                                    pinchBaseScale = nil
                                     if viewModel.selectedVideoTrackIndex == nil && viewModel.selectedClipID == nil && viewModel.selectedStickerID == nil {
                                         if viewModel.previewScale < 1.05 {
                                             withAnimation(.spring(response: 0.3)) {
@@ -166,25 +177,36 @@ struct EditorView: View {
                                 }
                         )
                         .simultaneousGesture(
+                            viewModel.selectedVideoTrackIndex != nil || viewModel.selectedClipID != nil || viewModel.selectedStickerID != nil ?
                             RotateGesture()
                                 .onChanged { value in
                                     if let videoIdx = viewModel.selectedVideoTrackIndex {
-                                        let currentRot = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.rotation ?? 0
-                                        viewModel.updateTrackRotation(trackIndex: videoIdx, rotation: currentRot + value.rotation.degrees)
+                                        if rotateBaseAngle == nil {
+                                            rotateBaseAngle = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.rotation ?? 0
+                                        }
+                                        viewModel.updateTrackRotation(trackIndex: videoIdx, rotation: (rotateBaseAngle ?? 0) + value.rotation.degrees)
                                     } else if let clipID = viewModel.selectedClipID {
                                         if let item = viewModel.activeTextOverlays.first(where: { $0.clip.id == clipID }),
                                            let textData = item.clip.textOverlay {
-                                            viewModel.updateTextRotation(trackIndex: item.trackIndex, clipIndex: item.clipIndex, rotation: textData.rotation + value.rotation.degrees)
+                                            if rotateBaseAngle == nil {
+                                                rotateBaseAngle = textData.rotation
+                                            }
+                                            viewModel.updateTextRotation(trackIndex: item.trackIndex, clipIndex: item.clipIndex, rotation: (rotateBaseAngle ?? 0) + value.rotation.degrees)
                                         }
                                     } else if let stickerID = viewModel.selectedStickerID {
                                         if let sticker = viewModel.stickers.first(where: { $0.id == stickerID }) {
-                                            viewModel.updateStickerRotation(id: stickerID, rotation: sticker.rotation + value.rotation.degrees)
+                                            if rotateBaseAngle == nil {
+                                                rotateBaseAngle = sticker.rotation
+                                            }
+                                            viewModel.updateStickerRotation(id: stickerID, rotation: (rotateBaseAngle ?? 0) + value.rotation.degrees)
                                         }
                                     }
                                 }
                                 .onEnded { _ in
+                                    rotateBaseAngle = nil
                                     viewModel.saveProject()
                                 }
+                            : nil
                         )
                         .simultaneousGesture(
                             viewModel.selectedVideoTrackIndex == nil && viewModel.selectedClipID == nil && viewModel.selectedStickerID == nil && viewModel.previewScale > 1.0 ?
@@ -210,7 +232,7 @@ struct EditorView: View {
                         Text("Import media to start editing")
                             .font(.subheadline)
                             .foregroundColor(.gray.opacity(0.5))
-                        Button(action: { showMediaPicker = true }) {
+                        Button(action: { viewModel.showMediaPicker = true }) {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
                                 Text("Add Media")
@@ -291,22 +313,15 @@ struct EditorView: View {
                         viewModel.selectedVideoTrackIndex = nil
                         viewModel.selectedStickerID = nil
                     },
-                    onDrag: isSelected ? { value in
-                        let newX = value.location.x / geo.size.width
-                        let newY = value.location.y / geo.size.height
+                    onDragEnd: isSelected ? { finalLocation in
+                        let newX = finalLocation.x / geo.size.width
+                        let newY = finalLocation.y / geo.size.height
                         let clampedX = max(0.05, min(0.95, newX))
                         let clampedY = max(0.05, min(0.95, newY))
                         viewModel.updateTextPosition(
                             trackIndex: item.trackIndex,
                             clipIndex: item.clipIndex,
                             position: CGPoint(x: clampedX, y: clampedY)
-                        )
-                    } : nil,
-                    onScale: isSelected ? { mag in
-                        viewModel.updateTextScale(
-                            trackIndex: item.trackIndex,
-                            clipIndex: item.clipIndex,
-                            scale: textData.scale * mag
                         )
                     } : nil,
                     onRotationChanged: isSelected ? { rot in
@@ -402,7 +417,7 @@ struct EditorView: View {
     }
 
     private var toolbarSection: some View {
-        ToolbarView(viewModel: viewModel, onAddMedia: { showMediaPicker = true })
+        ToolbarView(viewModel: viewModel, onAddMedia: { viewModel.showMediaPicker = true })
     }
 }
 
@@ -452,7 +467,11 @@ extension EditorView {
 
     var stickerOverlayLayer: some View {
         GeometryReader { geo in
-            ForEach(viewModel.stickers) { sticker in
+            let visibleStickers = viewModel.stickers.filter { sticker in
+                viewModel.currentTime >= sticker.startTime &&
+                viewModel.currentTime < sticker.startTime + sticker.duration
+            }
+            ForEach(visibleStickers) { sticker in
                 let isSelected = viewModel.selectedStickerID == sticker.id
                 StickerOverlayWithRotation(
                     sticker: sticker,
@@ -460,7 +479,7 @@ extension EditorView {
                     isSelected: isSelected,
                     onTap: {
                         viewModel.selectedStickerID = sticker.id
-                        viewModel.selectedClipID = nil
+                        viewModel.selectedClipID = sticker.clipID
                         viewModel.selectedVideoTrackIndex = nil
                     },
                     onDrag: isSelected ? { value in
@@ -476,15 +495,6 @@ extension EditorView {
                     onDragEnd: {
                         viewModel.saveProject()
                     },
-                    onScale: isSelected ? { mag in
-                        viewModel.updateStickerScale(
-                            id: sticker.id,
-                            scale: sticker.scale * mag
-                        )
-                    } : nil,
-                    onScaleEnd: {
-                        viewModel.saveProject()
-                    },
                     onRotationChanged: isSelected ? { rot in
                         viewModel.updateStickerRotation(
                             id: sticker.id,
@@ -498,6 +508,7 @@ extension EditorView {
                         viewModel.removeSticker(id: sticker.id)
                     }
                 )
+                .transaction { t in t.animation = nil }
             }
         }
     }
@@ -555,7 +566,7 @@ struct AnimatedTextView: View {
             .offset(y: textData.animationStyle == .slideUp ? 30 * (1.0 - animFraction) : 0)
             .scaleEffect(textData.animationStyle == .bounce ? bounceScale(animFraction) : 1.0)
             .offset(y: textData.animationStyle == .wave ? sin(animFraction * .pi * 2) * 6 : 0)
-            .animation(.easeOut(duration: 0.3), value: animFraction)
+            .transaction { t in t.animation = nil }
     }
 
     private func bounceScale(_ t: CGFloat) -> CGFloat {
@@ -574,12 +585,12 @@ struct TextOverlayWithRotation: View {
     let animFraction: CGFloat
     let isSelected: Bool
     var onTap: () -> Void
-    var onDrag: ((DragGesture.Value) -> Void)?
-    var onScale: ((CGFloat) -> Void)?
+    var onDragEnd: ((CGPoint) -> Void)?
     var onRotationChanged: ((Double) -> Void)?
 
     @State private var rotationHandleDrag: Angle = .zero
     @State private var isDraggingRotation: Bool = false
+    @State private var dragOffset: CGSize = .zero
 
     private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
     private let rotationHandleOffset: CGFloat = 30
@@ -635,17 +646,18 @@ struct TextOverlayWithRotation: View {
             }
         }
         .rotationEffect(.degrees(currentRotation))
+        .offset(dragOffset)
         .onTapGesture { onTap() }
         .gesture(
-            onDrag != nil && !isDraggingRotation ?
+            onDragEnd != nil && !isDraggingRotation ?
             DragGesture()
-                .onChanged { value in onDrag?(value) }
-            : nil
-        )
-        .simultaneousGesture(
-            onScale != nil ?
-            MagnifyGesture()
-                .onChanged { value in onScale?(value.magnification) }
+                .onChanged { value in
+                    dragOffset = value.translation
+                }
+                .onEnded { value in
+                    onDragEnd?(value.location)
+                    dragOffset = .zero
+                }
             : nil
         )
     }
@@ -658,8 +670,6 @@ struct StickerOverlayWithRotation: View {
     var onTap: () -> Void
     var onDrag: ((DragGesture.Value) -> Void)?
     var onDragEnd: (() -> Void)?
-    var onScale: ((CGFloat) -> Void)?
-    var onScaleEnd: (() -> Void)?
     var onRotationChanged: ((Double) -> Void)?
     var onRotationEnd: (() -> Void)?
     var onDoubleTap: () -> Void
@@ -674,16 +684,24 @@ struct StickerOverlayWithRotation: View {
         let currentRotation = sticker.rotation + rotationHandleDrag.degrees
 
         ZStack {
-            Text(sticker.emoji)
-                .font(.system(size: 48 * sticker.scale))
-                .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
-                .overlay(
-                    isSelected ?
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(accentColor, lineWidth: 2)
-                        .padding(-4)
-                    : nil
-                )
+            Group {
+                if let gifURL = sticker.gifURL, let url = URL(string: gifURL) {
+                    AnimatedGifView(url: url)
+                        .frame(width: 80 * sticker.scale, height: 80 * sticker.scale)
+                        .cornerRadius(8)
+                } else {
+                    Text(sticker.emoji)
+                        .font(.system(size: 48 * sticker.scale))
+                }
+            }
+            .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
+            .overlay(
+                isSelected ?
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(accentColor, lineWidth: 2)
+                    .padding(-4)
+                : nil
+            )
 
             if isSelected {
                 VStack(spacing: 0) {
@@ -733,13 +751,6 @@ struct StickerOverlayWithRotation: View {
                 .onEnded { _ in onDragEnd?() }
             : nil
         )
-        .simultaneousGesture(
-            onScale != nil ?
-            MagnifyGesture()
-                .onChanged { value in onScale?(value.magnification) }
-                .onEnded { _ in onScaleEnd?() }
-            : nil
-        )
     }
 }
 
@@ -749,8 +760,6 @@ struct VideoLayerOverlayView: View {
     @Bindable var viewModel: EditorViewModel
 
     @GestureState private var dragOffset: CGSize = .zero
-    @GestureState private var pinchMagnification: CGFloat = 1.0
-    @GestureState private var rotationDelta: Angle = .zero
     @State private var rotationHandleDrag: Angle = .zero
     @State private var isDraggingRotation: Bool = false
 
@@ -763,14 +772,14 @@ struct VideoLayerOverlayView: View {
         let isSelected = viewModel.selectedVideoTrackIndex == item.index
         let isFirstTrack = item.index == viewModel.videoTracks.first?.index
 
-        let currentScale = transform.scale * (isSelected ? pinchMagnification : 1.0)
+        let currentScale = transform.scale
         let boxW = geoSize.width * currentScale
         let boxH = geoSize.height * currentScale
 
         let posX = transform.position.x * geoSize.width + (isSelected ? dragOffset.width : 0)
         let posY = transform.position.y * geoSize.height + (isSelected ? dragOffset.height : 0)
 
-        let currentRotation = transform.rotation + (isSelected ? rotationDelta.degrees + rotationHandleDrag.degrees : 0)
+        let currentRotation = transform.rotation + (isSelected ? rotationHandleDrag.degrees : 0)
 
         ZStack {
             RoundedRectangle(cornerRadius: 6)
@@ -891,37 +900,53 @@ struct VideoLayerOverlayView: View {
                 }
             : nil
         )
-        .simultaneousGesture(
-            isSelected ?
-            MagnifyGesture()
-                .updating($pinchMagnification) { value, state, _ in
-                    state = value.magnification
+    }
+}
+
+struct AnimatedGifView: UIViewRepresentable {
+    let url: URL
+
+    func makeUIView(context: Context) -> UIImageView {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        imageView.backgroundColor = .clear
+        imageView.isUserInteractionEnabled = false
+        loadGif(into: imageView)
+        return imageView
+    }
+
+    func updateUIView(_ uiView: UIImageView, context: Context) {}
+
+    private func loadGif(into imageView: UIImageView) {
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data else { return }
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return }
+            let count = CGImageSourceGetCount(source)
+            var images: [UIImage] = []
+            var totalDuration: Double = 0
+
+            for i in 0..<count {
+                if let cgImage = CGImageSourceCreateImageAtIndex(source, i, nil) {
+                    images.append(UIImage(cgImage: cgImage))
+                    if let props = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as? [String: Any],
+                       let gifProps = props[kCGImagePropertyGIFDictionary as String] as? [String: Any] {
+                        let delay = gifProps[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double
+                            ?? gifProps[kCGImagePropertyGIFDelayTime as String] as? Double
+                            ?? 0.1
+                        totalDuration += delay
+                    } else {
+                        totalDuration += 0.1
+                    }
                 }
-                .onEnded { value in
-                    let newScale = max(0.1, min(2.0, transform.scale * value.magnification))
-                    viewModel.updateTrackScale(
-                        trackIndex: item.index,
-                        scale: newScale
-                    )
-                    viewModel.saveProject()
-                }
-            : nil
-        )
-        .simultaneousGesture(
-            isSelected ?
-            RotateGesture()
-                .updating($rotationDelta) { value, state, _ in
-                    state = value.rotation
-                }
-                .onEnded { value in
-                    let newRotation = transform.rotation + rotationDelta.degrees
-                    viewModel.updateTrackRotation(
-                        trackIndex: item.index,
-                        rotation: newRotation
-                    )
-                    viewModel.saveProject()
-                }
-            : nil
-        )
+            }
+
+            DispatchQueue.main.async {
+                imageView.animationImages = images
+                imageView.animationDuration = totalDuration
+                imageView.animationRepeatCount = 0
+                imageView.startAnimating()
+            }
+        }.resume()
     }
 }
