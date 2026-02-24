@@ -313,9 +313,9 @@ struct EditorView: View {
                         viewModel.selectedVideoTrackIndex = nil
                         viewModel.selectedStickerID = nil
                     },
-                    onDragEnd: isSelected ? { finalLocation in
-                        let newX = finalLocation.x / geo.size.width
-                        let newY = finalLocation.y / geo.size.height
+                    onDragEnd: isSelected ? { translation in
+                        let newX = textData.position.x + translation.width / geo.size.width
+                        let newY = textData.position.y + translation.height / geo.size.height
                         let clampedX = max(0.05, min(0.95, newX))
                         let clampedY = max(0.05, min(0.95, newY))
                         viewModel.updateTextPosition(
@@ -482,19 +482,19 @@ extension EditorView {
                         viewModel.selectedClipID = sticker.clipID
                         viewModel.selectedVideoTrackIndex = nil
                     },
-                    onDrag: isSelected ? { value in
-                        let newX = value.location.x / geo.size.width
-                        let newY = value.location.y / geo.size.height
+                    onDragEnd: isSelected ? { translation in
+                        let newX = sticker.position.x + translation.width / geo.size.width
+                        let newY = sticker.position.y + translation.height / geo.size.height
                         let clampedX = max(0.05, min(0.95, newX))
                         let clampedY = max(0.05, min(0.95, newY))
                         viewModel.updateStickerPosition(
                             id: sticker.id,
                             position: CGPoint(x: clampedX, y: clampedY)
                         )
-                    } : nil,
-                    onDragEnd: {
                         viewModel.saveProject()
-                    },
+                    } : nil,
+
+
                     onRotationChanged: isSelected ? { rot in
                         viewModel.updateStickerRotation(
                             id: sticker.id,
@@ -585,7 +585,7 @@ struct TextOverlayWithRotation: View {
     let animFraction: CGFloat
     let isSelected: Bool
     var onTap: () -> Void
-    var onDragEnd: ((CGPoint) -> Void)?
+    var onDragEnd: ((CGSize) -> Void)?
     var onRotationChanged: ((Double) -> Void)?
 
     @State private var rotationHandleDrag: Angle = .zero
@@ -655,7 +655,7 @@ struct TextOverlayWithRotation: View {
                     dragOffset = value.translation
                 }
                 .onEnded { value in
-                    onDragEnd?(value.location)
+                    onDragEnd?(value.translation)
                     dragOffset = .zero
                 }
             : nil
@@ -668,14 +668,14 @@ struct StickerOverlayWithRotation: View {
     let geoSize: CGSize
     let isSelected: Bool
     var onTap: () -> Void
-    var onDrag: ((DragGesture.Value) -> Void)?
-    var onDragEnd: (() -> Void)?
+    var onDragEnd: ((CGSize) -> Void)?
     var onRotationChanged: ((Double) -> Void)?
     var onRotationEnd: (() -> Void)?
     var onDoubleTap: () -> Void
 
     @State private var rotationHandleDrag: Angle = .zero
     @State private var isDraggingRotation: Bool = false
+    @State private var dragOffset: CGSize = .zero
 
     private let accentColor = Color(red: 0.42, green: 0.36, blue: 0.91)
     private let rotationHandleOffset: CGFloat = 30
@@ -689,11 +689,13 @@ struct StickerOverlayWithRotation: View {
                     AnimatedGifView(url: url)
                         .frame(width: 80 * sticker.scale, height: 80 * sticker.scale)
                         .cornerRadius(8)
+                        .allowsHitTesting(false)
                 } else {
                     Text(sticker.emoji)
                         .font(.system(size: 48 * sticker.scale))
                 }
             }
+            .contentShape(Rectangle())
             .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
             .overlay(
                 isSelected ?
@@ -742,13 +744,19 @@ struct StickerOverlayWithRotation: View {
             x: sticker.position.x * geoSize.width,
             y: sticker.position.y * geoSize.height
         )
+        .offset(dragOffset)
         .onTapGesture { onTap() }
         .onTapGesture(count: 2) { onDoubleTap() }
         .gesture(
-            onDrag != nil && !isDraggingRotation ?
+            onDragEnd != nil && !isDraggingRotation ?
             DragGesture()
-                .onChanged { value in onDrag?(value) }
-                .onEnded { _ in onDragEnd?() }
+                .onChanged { value in
+                    dragOffset = value.translation
+                }
+                .onEnded { value in
+                    onDragEnd?(value.translation)
+                    dragOffset = .zero
+                }
             : nil
         )
     }
@@ -759,7 +767,7 @@ struct VideoLayerOverlayView: View {
     let geoSize: CGSize
     @Bindable var viewModel: EditorViewModel
 
-    @GestureState private var dragOffset: CGSize = .zero
+    @State private var dragOffset: CGSize = .zero
     @State private var rotationHandleDrag: Angle = .zero
     @State private var isDraggingRotation: Bool = false
 
@@ -877,12 +885,12 @@ struct VideoLayerOverlayView: View {
             viewModel.selectedClipID = nil
             viewModel.selectedStickerID = nil
         }
-        .gesture(
+        .simultaneousGesture(
             isSelected ?
             DragGesture()
-                .updating($dragOffset) { value, state, _ in
+                .onChanged { value in
                     if !isDraggingRotation {
-                        state = value.translation
+                        dragOffset = value.translation
                     }
                 }
                 .onEnded { value in
@@ -897,6 +905,7 @@ struct VideoLayerOverlayView: View {
                         )
                         viewModel.saveProject()
                     }
+                    dragOffset = .zero
                 }
             : nil
         )
