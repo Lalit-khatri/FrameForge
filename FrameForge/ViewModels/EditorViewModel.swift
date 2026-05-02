@@ -910,7 +910,26 @@ final class EditorViewModel {
 
         Task { @MainActor in
             do {
-                let (comp, videoComp, audioMix) = try await compositionEngine.buildComposition(from: tracks, renderSize: canvasRenderSize, cropRect: cropRect, masterVolume: masterVolume)
+                var stickerInfos: [OverlayStickerInfo] = []
+                for sticker in stickers {
+                    var gifFrames: GifFrameData? = nil
+                    if let gifURL = sticker.gifURL, let url = URL(string: gifURL) {
+                        if let data = try? await URLSession.shared.data(from: url).0 {
+                            gifFrames = GifFrameData.extract(from: data)
+                        }
+                    }
+                    stickerInfos.append(OverlayStickerInfo(
+                        emoji: sticker.emoji,
+                        position: sticker.position,
+                        scale: sticker.scale,
+                        rotation: sticker.rotation,
+                        startTime: sticker.startTime,
+                        duration: sticker.duration,
+                        gifFrames: gifFrames
+                    ))
+                }
+
+                let (comp, videoComp, audioMix) = try await compositionEngine.buildComposition(from: tracks, stickers: stickerInfos, renderSize: canvasRenderSize, cropRect: cropRect, masterVolume: masterVolume)
                 let url = try await exportPipeline.export(
                     composition: comp,
                     videoComposition: videoComp,
