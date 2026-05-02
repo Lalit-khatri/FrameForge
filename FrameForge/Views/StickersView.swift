@@ -10,7 +10,7 @@ struct StickersView: View {
     @State private var isSearchingGifs = false
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 6)
-    private let tenorAPIKey = "AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ"
+    private let tenorAPIKey = Bundle.main.infoDictionary?["TenorAPIKey"] as? String ?? ""
 
     var body: some View {
         NavigationStack {

@@ -140,7 +140,7 @@ struct EditorView: View {
                                 .onChanged { value in
                                     if let videoIdx = viewModel.selectedVideoTrackIndex {
                                         if pinchBaseScale == nil {
-                                            pinchBaseScale = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.scale ?? 1.0
+                                            pinchBaseScale = viewModel.videoTracks.first(where: { $0.index == videoIdx })?.track.transform?.scale ?? 1.0
                                         }
                                         viewModel.updateTrackScale(trackIndex: videoIdx, scale: (pinchBaseScale ?? 1.0) * value.magnification)
                                     } else if let clipID = viewModel.selectedClipID {
@@ -182,7 +182,7 @@ struct EditorView: View {
                                 .onChanged { value in
                                     if let videoIdx = viewModel.selectedVideoTrackIndex {
                                         if rotateBaseAngle == nil {
-                                            rotateBaseAngle = viewModel.tracks.flatMap({ _ in viewModel.videoTracks }).first(where: { $0.index == videoIdx })?.track.transform?.rotation ?? 0
+                                            rotateBaseAngle = viewModel.videoTracks.first(where: { $0.index == videoIdx })?.track.transform?.rotation ?? 0
                                         }
                                         viewModel.updateTrackRotation(trackIndex: videoIdx, rotation: (rotateBaseAngle ?? 0) + value.rotation.degrees)
                                     } else if let clipID = viewModel.selectedClipID {
@@ -745,8 +745,8 @@ struct StickerOverlayWithRotation: View {
             y: sticker.position.y * geoSize.height
         )
         .offset(dragOffset)
-        .onTapGesture { onTap() }
         .onTapGesture(count: 2) { onDoubleTap() }
+        .onTapGesture { onTap() }
         .gesture(
             onDragEnd != nil && !isDraggingRotation ?
             DragGesture()

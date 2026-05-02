@@ -64,7 +64,7 @@ final class CompositionEngine: Sendable {
                                 }
                                 let params = AVMutableAudioMixInputParameters(track: compositionAudioTrack)
                                 let vol = (track.isMuted || clip.isMuted) ? Float(0) : (clip.volume * track.volume * masterVolume)
-                                params.setVolume(vol, at: .zero)
+                                params.setVolume(vol, at: insertTime)
                                 audioMixParams.append(params)
                                 audioTrackIndex += 1
                             }
@@ -157,7 +157,7 @@ final class CompositionEngine: Sendable {
 
                                 let params = AVMutableAudioMixInputParameters(track: compositionAudioTrack)
                                 let vol = (track.isMuted || clip.isMuted) ? Float(0) : (clip.volume * track.volume * masterVolume)
-                                params.setVolume(vol, at: .zero)
+                                params.setVolume(vol, at: insertTime)
                                 audioMixParams.append(params)
                                 audioTrackIndex += 1
                             }
@@ -200,7 +200,7 @@ final class CompositionEngine: Sendable {
 
                         let params = AVMutableAudioMixInputParameters(track: compositionAudioTrack)
                         let vol = (track.isMuted || clip.isMuted) ? Float(0) : (clip.volume * track.volume * masterVolume)
-                        params.setVolume(vol, at: .zero)
+                        params.setVolume(vol, at: insertTime)
                         audioMixParams.append(params)
                         audioTrackIndex += 1
                     }

@@ -37,8 +37,29 @@ final class ExportPipeline {
             let scale = settings.resolution.multiplier
             let exportWidth = round(baseSize.width * scale / 2) * 2
             let exportHeight = round(baseSize.height * scale / 2) * 2
-            videoComp.renderSize = CGSize(width: exportWidth, height: exportHeight)
+            let exportSize = CGSize(width: exportWidth, height: exportHeight)
+            videoComp.renderSize = exportSize
             videoComp.frameDuration = CMTime(value: 1, timescale: CMTimeScale(settings.frameRate))
+
+            let updatedInstructions = videoComp.instructions.compactMap { instruction -> AVVideoCompositionInstructionProtocol? in
+                guard let multiInstruction = instruction as? MultiLayerCompositionInstruction else {
+                    return instruction
+                }
+                return MultiLayerCompositionInstruction(
+                    timeRange: multiInstruction.timeRange,
+                    sourceTrackIDs: (multiInstruction.requiredSourceTrackIDs as? [NSNumber])?.map { CMPersistentTrackID($0.int32Value) } ?? [],
+                    layerTransforms: multiInstruction.layerTransforms,
+                    layerFilters: multiInstruction.layerFilters,
+                    layerOpacities: multiInstruction.layerOpacities,
+                    layerEffects: multiInstruction.layerEffects,
+                    cropRect: multiInstruction.cropRect,
+                    renderSize: exportSize,
+                    transitions: multiInstruction.transitions,
+                    textOverlays: multiInstruction.textOverlays,
+                    stickerOverlays: multiInstruction.stickerOverlays
+                )
+            }
+            videoComp.instructions = updatedInstructions
         }
 
         session.outputURL = outputURL

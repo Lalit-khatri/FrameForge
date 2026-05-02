@@ -12,6 +12,8 @@ struct ExportView: View {
 
                 if viewModel.isExporting {
                     exportingView
+                } else if let error = viewModel.exportError {
+                    exportErrorView(error: error)
                 } else if viewModel.exportProgress >= 1.0 && !viewModel.isExporting {
                     exportCompleteView
                 } else {
@@ -322,6 +324,54 @@ struct ExportView: View {
                         .background(Color(red: 0.42, green: 0.36, blue: 0.91))
                         .foregroundColor(.white)
                         .cornerRadius(16)
+                }
+            }
+            .padding(.horizontal, 40)
+        }
+    }
+
+    private func exportErrorView(error: Error) -> some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.15))
+                    .frame(width: 100, height: 100)
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 56))
+                    .foregroundColor(.red)
+            }
+
+            Text("Export Failed")
+                .font(.title2.bold())
+                .foregroundColor(.white)
+
+            Text(error.localizedDescription)
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            VStack(spacing: 12) {
+                Button(action: {
+                    viewModel.exportProgress = 0
+                    viewModel.exportError = nil
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Try Again")
+                    }
+                    .font(.subheadline.bold())
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(red: 0.42, green: 0.36, blue: 0.91))
+                    .foregroundColor(.white)
+                    .cornerRadius(16)
+                }
+
+                Button(action: { dismiss() }) {
+                    Text("Dismiss")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
                 }
             }
             .padding(.horizontal, 40)
