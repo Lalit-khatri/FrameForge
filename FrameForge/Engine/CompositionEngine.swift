@@ -4,7 +4,7 @@ import CoreImage
 
 final class CompositionEngine: Sendable {
 
-    func buildComposition(from tracks: [TimelineTrack], renderSize: CGSize = CGSize(width: 1920, height: 1080), cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1), masterVolume: Float = 1.0) async throws -> (AVMutableComposition, AVMutableVideoComposition?, AVMutableAudioMix?) {
+    func buildComposition(from tracks: [TimelineTrack], stickers: [OverlayStickerInfo] = [], renderSize: CGSize = CGSize(width: 1920, height: 1080), cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1), masterVolume: Float = 1.0) async throws -> (AVMutableComposition, AVMutableVideoComposition?, AVMutableAudioMix?) {
         let comp = AVMutableComposition()
 
         var videoTrackIndex = 0
@@ -114,6 +114,9 @@ final class CompositionEngine: Sendable {
                     videoTrackIndex += 2
 
                 } else {
+                    let hasVideoClips = track.clips.contains { $0.assetURL != nil }
+                    guard hasVideoClips else { continue }
+
                     let trackID = CMPersistentTrackID(videoTrackIndex + 1)
                     guard let compositionVideoTrack = comp.addMutableTrack(
                         withMediaType: .video,
@@ -213,7 +216,9 @@ final class CompositionEngine: Sendable {
             renderSize: renderSize,
             layerMappings: videoLayerMappings,
             cropRect: cropRect,
-            transitions: transitionInfos
+            transitions: transitionInfos,
+            tracks: tracks,
+            stickerOverlays: stickers
         )
 
         var audioMix: AVMutableAudioMix? = nil
@@ -231,7 +236,9 @@ final class CompositionEngine: Sendable {
         renderSize: CGSize,
         layerMappings: [(trackID: CMPersistentTrackID, transform: VideoTrackTransform, opacity: Float, effects: [ClipEffect])],
         cropRect: CGRect,
-        transitions: [TransitionInfo] = []
+        transitions: [TransitionInfo] = [],
+        tracks: [TimelineTrack] = [],
+        stickerOverlays: [OverlayStickerInfo] = []
     ) -> AVMutableVideoComposition? {
         guard !layerMappings.isEmpty else { return nil }
 
@@ -251,6 +258,15 @@ final class CompositionEngine: Sendable {
             sourceTrackIDs.append(mapping.trackID)
         }
 
+        var textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)] = []
+        for track in tracks where track.type == .text {
+            for clip in track.clips {
+                if let textData = clip.textOverlay {
+                    textOverlays.append((text: textData, startTime: clip.startTime, endTime: clip.endTime))
+                }
+            }
+        }
+
         let instruction = MultiLayerCompositionInstruction(
             timeRange: CMTimeRange(start: .zero, duration: duration),
             sourceTrackIDs: sourceTrackIDs,
@@ -259,7 +275,9 @@ final class CompositionEngine: Sendable {
             layerEffects: effects,
             cropRect: cropRect,
             renderSize: renderSize,
-            transitions: transitions
+            transitions: transitions,
+            textOverlays: textOverlays,
+            stickerOverlays: stickerOverlays
         )
 
         let videoComp = AVMutableVideoComposition()

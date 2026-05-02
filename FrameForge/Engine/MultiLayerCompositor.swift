@@ -1,5 +1,61 @@
 import AVFoundation
 import CoreImage
+import UIKit
+import ImageIO
+
+struct GifFrameData {
+    let gifData: Data
+    let frameDurations: [Double]
+    let totalDuration: Double
+    let frameCount: Int
+
+    func frameAt(time: Double) -> CGImage? {
+        guard frameCount > 0, totalDuration > 0 else { return nil }
+        let loopedTime = time.truncatingRemainder(dividingBy: totalDuration)
+        var accumulated: Double = 0
+        var targetIndex = 0
+        for (i, dur) in frameDurations.enumerated() {
+            accumulated += dur
+            if loopedTime < accumulated {
+                targetIndex = i
+                break
+            }
+        }
+        guard let source = CGImageSourceCreateWithData(gifData as CFData, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, targetIndex, nil)
+    }
+
+    static func extract(from data: Data) -> GifFrameData? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let count = CGImageSourceGetCount(source)
+        guard count > 0 else { return nil }
+        var durations: [Double] = []
+        var total: Double = 0
+        for i in 0..<count {
+            var delay = 0.1
+            if let props = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as? [String: Any],
+               let gifProps = props[kCGImagePropertyGIFDictionary as String] as? [String: Any] {
+                delay = gifProps[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double
+                    ?? gifProps[kCGImagePropertyGIFDelayTime as String] as? Double
+                    ?? 0.1
+                if delay < 0.01 { delay = 0.1 }
+            }
+            durations.append(delay)
+            total += delay
+        }
+        return GifFrameData(gifData: data, frameDurations: durations, totalDuration: total, frameCount: count)
+    }
+}
+
+struct OverlayStickerInfo {
+    let emoji: String
+    let position: CGPoint
+    let scale: CGFloat
+    let rotation: Double
+    let startTime: Double
+    let duration: Double
+    let gifFrames: GifFrameData?
+}
 
 struct TransitionInfo {
     let type: String
@@ -22,6 +78,8 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
     let cropRect: CGRect
     let renderSize: CGSize
     let transitions: [TransitionInfo]
+    let textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)]
+    let stickerOverlays: [OverlayStickerInfo]
 
     init(
         timeRange: CMTimeRange,
@@ -32,7 +90,9 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         layerEffects: [CMPersistentTrackID: [ClipEffect]] = [:],
         cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1),
         renderSize: CGSize,
-        transitions: [TransitionInfo] = []
+        transitions: [TransitionInfo] = [],
+        textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)] = [],
+        stickerOverlays: [OverlayStickerInfo] = []
     ) {
         self.timeRange = timeRange
         self.layerTransforms = layerTransforms
@@ -42,6 +102,8 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         self.cropRect = cropRect
         self.renderSize = renderSize
         self.transitions = transitions
+        self.textOverlays = textOverlays
+        self.stickerOverlays = stickerOverlays
         self.requiredSourceTrackIDs = sourceTrackIDs.map { NSNumber(value: $0) }
     }
 }
@@ -183,6 +245,106 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
 
             layerImage = layerImage.cropped(to: extent)
             composited = layerImage.composited(over: composited)
+        }
+
+        let currentSeconds = CMTimeGetSeconds(currentTime)
+
+        for textInfo in instruction.textOverlays {
+            guard currentSeconds >= textInfo.startTime && currentSeconds < textInfo.endTime else { continue }
+            let textData = textInfo.text
+            let scaleFactor = renderSize.width / 390.0
+            let fontSize = textData.fontSize * scaleFactor * textData.scale
+            let font = UIFont(name: textData.fontName, size: fontSize)
+                ?? UIFont.boldSystemFont(ofSize: fontSize)
+
+            let textSize = (textData.text as NSString).size(withAttributes: [.font: font])
+            let layerWidth = textSize.width + 20
+            let layerHeight = textSize.height + 10
+
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: layerWidth, height: layerHeight))
+            let textImage = renderer.image { ctx in
+                if let bgColor = textData.backgroundColor {
+                    let uiBg = UIColor(red: bgColor.red, green: bgColor.green, blue: bgColor.blue, alpha: bgColor.alpha)
+                    uiBg.setFill()
+                    UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: layerWidth, height: layerHeight), cornerRadius: 6).fill()
+                }
+                let textColor = UIColor(red: textData.textColor.red, green: textData.textColor.green, blue: textData.textColor.blue, alpha: textData.textColor.alpha)
+                let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+                let drawPoint = CGPoint(x: 10, y: 5)
+                (textData.text as NSString).draw(at: drawPoint, withAttributes: attrs)
+            }
+
+            if let cgImage = textImage.cgImage {
+                var ciText = CIImage(cgImage: cgImage)
+                let posX = textData.position.x * renderSize.width - layerWidth / 2
+                let posY = (1 - textData.position.y) * renderSize.height - layerHeight / 2
+                ciText = ciText.transformed(by: CGAffineTransform(translationX: posX, y: posY))
+
+                if textData.rotation != 0 {
+                    let cx = posX + layerWidth / 2
+                    let cy = posY + layerHeight / 2
+                    ciText = ciText
+                        .transformed(by: CGAffineTransform(translationX: -cx, y: -cy))
+                        .transformed(by: CGAffineTransform(rotationAngle: CGFloat(textData.rotation * .pi / 180)))
+                        .transformed(by: CGAffineTransform(translationX: cx, y: cy))
+                }
+
+                ciText = ciText.cropped(to: extent)
+                composited = ciText.composited(over: composited)
+            }
+        }
+
+        for sticker in instruction.stickerOverlays {
+            guard currentSeconds >= sticker.startTime && currentSeconds < sticker.startTime + sticker.duration else { continue }
+
+            let stickerSize = 80.0 * sticker.scale
+            let renderSizeSticker = CGSize(width: stickerSize, height: stickerSize)
+
+            var ciSticker: CIImage?
+
+            if let gifFrames = sticker.gifFrames {
+                let elapsed = currentSeconds - sticker.startTime
+                if let frame = gifFrames.frameAt(time: elapsed) {
+                    let frameImage = CIImage(cgImage: frame)
+                    let scaleX = stickerSize / frameImage.extent.width
+                    let scaleY = stickerSize / frameImage.extent.height
+                    let fitScale = min(scaleX, scaleY)
+                    ciSticker = frameImage.transformed(by: CGAffineTransform(scaleX: fitScale, y: fitScale))
+                }
+            } else {
+                let renderer = UIGraphicsImageRenderer(size: renderSizeSticker)
+                let emojiImage = renderer.image { _ in
+                    let emojiFont = UIFont.systemFont(ofSize: stickerSize * 0.8)
+                    let attrs: [NSAttributedString.Key: Any] = [.font: emojiFont]
+                    let emojiSize = (sticker.emoji as NSString).size(withAttributes: attrs)
+                    let drawX = (stickerSize - emojiSize.width) / 2
+                    let drawY = (stickerSize - emojiSize.height) / 2
+                    (sticker.emoji as NSString).draw(at: CGPoint(x: drawX, y: drawY), withAttributes: attrs)
+                }
+                if let cg = emojiImage.cgImage {
+                    ciSticker = CIImage(cgImage: cg)
+                }
+            }
+
+            if var stickerImage = ciSticker {
+                let scaledW = stickerImage.extent.width
+                let scaledH = stickerImage.extent.height
+                let posX = sticker.position.x * renderSize.width - scaledW / 2
+                let posY = (1 - sticker.position.y) * renderSize.height - scaledH / 2
+                stickerImage = stickerImage.transformed(by: CGAffineTransform(translationX: posX, y: posY))
+
+                if sticker.rotation != 0 {
+                    let cx = posX + scaledW / 2
+                    let cy = posY + scaledH / 2
+                    stickerImage = stickerImage
+                        .transformed(by: CGAffineTransform(translationX: -cx, y: -cy))
+                        .transformed(by: CGAffineTransform(rotationAngle: CGFloat(sticker.rotation * .pi / 180)))
+                        .transformed(by: CGAffineTransform(translationX: cx, y: cy))
+                }
+
+                stickerImage = stickerImage.cropped(to: extent)
+                composited = stickerImage.composited(over: composited)
+            }
         }
 
         let isCropped = instruction.cropRect != CGRect(x: 0, y: 0, width: 1, height: 1)
