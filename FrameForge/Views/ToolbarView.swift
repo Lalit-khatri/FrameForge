@@ -84,6 +84,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showBeatSync) {
             BeatSyncView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showSplitScreen) {
+            SplitScreenView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -127,6 +130,9 @@ struct ToolbarView: View {
                 }
                 toolButton("LUT", icon: "paintpalette", color: .white) {
                     viewModel.showLUTImport = true
+                }
+                toolButton("Split", icon: "rectangle.split.2x2", color: .white) {
+                    viewModel.showSplitScreen = true
                 }
                 toolButton("Cloud", icon: "icloud", color: .white) {
                     viewModel.showCloudBackup = true
