@@ -123,33 +123,22 @@ struct SpeedControlView: View {
 
     private var speedCurveEditor: some View {
         VStack(spacing: 16) {
-            Slider(value: $speed, in: 0.1...8.0, step: 0.05)
-                .tint(Color(red: 0.42, green: 0.36, blue: 0.91))
-                .padding(.horizontal)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(presetSpeeds, id: \.1) { name, value in
-                        Button(action: {
-                            speed = value
-                            HapticManager.shared.selection()
-                        }) {
-                            Text(name)
-                                .font(.caption.bold())
-                                .foregroundColor(speed == value ? .white : .gray)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(
-                                    speed == value
-                                    ? Color(red: 0.42, green: 0.36, blue: 0.91)
-                                    : Color.white.opacity(0.08)
-                                )
-                                .cornerRadius(20)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
+            Spacer()
+            Image(systemName: "waveform.path")
+                .font(.system(size: 48))
+                .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91).opacity(0.5))
+            Text("Speed Curve Editor")
+                .font(.headline.bold())
+                .foregroundColor(.white)
+            Text("Coming Soon")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+            Text("Draw custom speed ramps for cinematic slow-mo and fast-forward effects")
+                .font(.caption)
+                .foregroundColor(.gray.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Spacer()
         }
     }
 }

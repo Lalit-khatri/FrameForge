@@ -109,9 +109,14 @@ struct MediaPickerView: View {
         let fileName = "FrameForge_img_\(UUID().uuidString).mp4"
         let outputURL = tempDir.appendingPathComponent(fileName)
 
+        let maxWidth: CGFloat = 1920
+        let maxHeight: CGFloat = 1080
+        let scaleW = min(1.0, maxWidth / uiImage.size.width)
+        let scaleH = min(1.0, maxHeight / uiImage.size.height)
+        let scale = min(scaleW, scaleH)
         let size = CGSize(
-            width: min(uiImage.size.width, 1920),
-            height: min(uiImage.size.height, 1080)
+            width: uiImage.size.width * scale,
+            height: uiImage.size.height * scale
         )
 
         do {

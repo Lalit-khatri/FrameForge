@@ -44,7 +44,7 @@ struct CropView: View {
     private var cropPreview: some View {
         GeometryReader { geo in
             let containerSize = geo.size
-            let videoAspect: CGFloat = 16.0 / 9.0
+            let videoAspect: CGFloat = viewModel.videoAspectRatio
             let videoWidth = min(containerSize.width, containerSize.height * videoAspect)
             let videoHeight = videoWidth / videoAspect
             let videoRect = CGRect(
@@ -134,7 +134,7 @@ struct CropView: View {
                 }
             }
         }
-        .aspectRatio(16.0/9.0, contentMode: .fit)
+        .aspectRatio(viewModel.videoAspectRatio, contentMode: .fit)
     }
 
     private func cropFrameInPoints(videoRect: CGRect) -> CGRect {

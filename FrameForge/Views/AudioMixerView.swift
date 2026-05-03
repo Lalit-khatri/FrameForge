@@ -165,9 +165,19 @@ struct AudioMixerView: View {
 
     private var audioEffects: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Audio Effects")
-                .font(.subheadline.bold())
-                .foregroundColor(.white)
+            HStack {
+                Text("Audio Effects")
+                    .font(.subheadline.bold())
+                    .foregroundColor(.white)
+                Spacer()
+                Text("Coming Soon")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(8)
+            }
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 audioEffectCard("Fade In", icon: "arrow.up.right", description: "Gradually increase volume")
@@ -181,6 +191,7 @@ struct AudioMixerView: View {
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(16)
+        .opacity(0.6)
     }
 
     private func audioEffectCard(_ name: String, icon: String, description: String) -> some View {
