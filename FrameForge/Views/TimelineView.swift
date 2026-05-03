@@ -135,8 +135,12 @@ struct TimelineView: View {
                 let delta = value.translation.width - scrubAccumulated
                 scrubAccumulated = value.translation.width
                 let timeDelta = Double(-delta) / Double(scaledPixelsPerSecond)
-                let newTime = viewModel.currentTime + timeDelta
-                viewModel.seek(to: max(0, min(newTime, viewModel.totalDuration)))
+                let oldTime = viewModel.currentTime
+                let newTime = max(0, min(oldTime + timeDelta, viewModel.totalDuration))
+                if Int(newTime * 2) != Int(oldTime * 2) {
+                    HapticManager.shared.light()
+                }
+                viewModel.seek(to: newTime)
             }
             .onEnded { _ in
                 isDraggingScrub = false
