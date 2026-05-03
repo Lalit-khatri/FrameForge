@@ -26,17 +26,22 @@ struct BannerAdView: UIViewRepresentable {
 struct AdBannerContainer: View {
     @ObservedObject private var store = StoreKitManager.shared
 
-    private enum AdUnitIDs {
+    private enum Keys {
+        static let plistKey = "GADApplicationIdentifier"
+        static let testBanner = "ca-app-pub-3940256099942544/2435281174"
+    }
+
+    private var adUnitID: String {
         #if DEBUG
-        static let banner = "ca-app-pub-3940256099942544/2435281174"
+        return Keys.testBanner
         #else
-        static let banner = "ca-app-pub-8035596577604363~8815402433"
+        return Bundle.main.object(forInfoDictionaryKey: Keys.plistKey) as? String ?? Keys.testBanner
         #endif
     }
 
     var body: some View {
         if !store.isPro {
-            BannerAdView(adUnitID: AdUnitIDs.banner)
+            BannerAdView(adUnitID: adUnitID)
                 .frame(height: 50)
                 .background(Color.black)
         }
