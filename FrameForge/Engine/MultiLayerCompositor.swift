@@ -2,6 +2,7 @@ import AVFoundation
 import CoreImage
 import UIKit
 import ImageIO
+import Vision
 
 struct GifFrameData {
     let gifData: Data
@@ -643,6 +644,47 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
                 result = result.applyingFilter("CIPixellate", parameters: [
                     kCIInputScaleKey: scale,
                     "inputCenter": CIVector(x: extent.midX, y: extent.midY)
+                ]).cropped(to: extent)
+
+            case .backgroundRemoval:
+                let request = VNGeneratePersonSegmentationRequest()
+                request.qualityLevel = .balanced
+                request.outputPixelFormat = kCVPixelFormatType_OneComponent8
+
+                guard let cgImage = CIContext().createCGImage(result, from: extent) else { break }
+                let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+                try? handler.perform([request])
+
+                guard let maskObs = request.results?.first,
+                      let maskBuffer = maskObs.pixelBuffer else { break }
+
+                let maskCI = CIImage(cvPixelBuffer: maskBuffer)
+                let scaleX = extent.width / maskCI.extent.width
+                let scaleY = extent.height / maskCI.extent.height
+                let scaledMask = maskCI
+                    .transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+                    .cropped(to: extent)
+
+                let bgModeVal = Int(effect.parameters["bgMode"] ?? 0)
+
+                var background: CIImage
+                if bgModeVal == 1 {
+                    let r = CGFloat(effect.parameters["colorR"] ?? 0)
+                    let g = CGFloat(effect.parameters["colorG"] ?? 1)
+                    let b = CGFloat(effect.parameters["colorB"] ?? 0)
+                    background = CIImage(color: CIColor(red: r, green: g, blue: b)).cropped(to: extent)
+                } else if bgModeVal == 2 {
+                    background = CIImage(color: CIColor.clear).cropped(to: extent)
+                } else {
+                    let blurRadius = CGFloat(effect.parameters["blurRadius"] ?? 0.7) * 30.0
+                    background = result.applyingFilter("CIGaussianBlur", parameters: [
+                        kCIInputRadiusKey: blurRadius
+                    ]).cropped(to: extent)
+                }
+
+                result = result.applyingFilter("CIBlendWithMask", parameters: [
+                    kCIInputBackgroundImageKey: background,
+                    kCIInputMaskImageKey: scaledMask
                 ]).cropped(to: extent)
             }
         }

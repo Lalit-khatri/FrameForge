@@ -36,6 +36,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showCaptionsView) {
             CaptionsView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showBackgroundRemoval) {
+            BackgroundRemovalView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -58,6 +61,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Effects", icon: "sparkles", color: .white) {
                     viewModel.showEffectsPanel = true
+                }
+                toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
+                    viewModel.showBackgroundRemoval = true
                 }
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true

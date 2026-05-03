@@ -228,6 +228,7 @@ struct EffectsView: View {
         case .opacity: return "circle.lefthalf.filled"
         case .denoise: return "ear.trianglebadge.exclamationmark"
         case .mosaic: return "square.grid.4x3.fill"
+        case .backgroundRemoval: return "person.crop.rectangle"
         }
     }
 }

@@ -23,6 +23,7 @@ final class EditorViewModel {
     var showCropTool = false
     var showStickerPicker = false
     var showCaptionsView = false
+    var showBackgroundRemoval = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

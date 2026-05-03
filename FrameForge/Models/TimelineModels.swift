@@ -174,10 +174,11 @@ enum EffectType: String, Codable, CaseIterable {
     case opacity = "Opacity"
     case denoise = "Denoise"
     case mosaic = "Mosaic"
+    case backgroundRemoval = "BG Remove"
 
     var hasIntensitySlider: Bool {
         switch self {
-        case .mirror, .flip, .reverse:
+        case .mirror, .flip, .reverse, .backgroundRemoval:
             return false
         default:
             return true
