@@ -22,6 +22,7 @@ final class EditorViewModel {
     var showAudioMixer = false
     var showCropTool = false
     var showStickerPicker = false
+    var showCaptionsView = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()
@@ -703,6 +704,38 @@ final class EditorViewModel {
         totalDuration = compositionEngine.getTotalDuration(for: tracks)
         Task { await rebuildComposition() }
         HapticManager.shared.success()
+    }
+
+    func addCaptionSegments(_ segments: [CaptionSegment], style: CaptionStyle) {
+        removeCaptions()
+
+        if tracks.first(where: { $0.type == .text }) == nil {
+            tracks.append(TimelineTrack(type: .text))
+        }
+        guard let textTrackIndex = tracks.firstIndex(where: { $0.type == .text }) else { return }
+
+        for segment in segments {
+            let overlay = style.toOverlay(text: segment.text)
+            let duration = max(0.3, segment.endTime - segment.startTime)
+            var clip = TimelineClip(
+                assetURL: nil,
+                startTime: segment.startTime,
+                duration: duration,
+                originalDuration: duration
+            )
+            clip.textOverlay = overlay
+            tracks[textTrackIndex].clips.append(clip)
+        }
+
+        totalDuration = compositionEngine.getTotalDuration(for: tracks)
+        Task { await rebuildComposition() }
+        HapticManager.shared.success()
+    }
+
+    func removeCaptions() {
+        if let idx = tracks.firstIndex(where: { $0.type == .text }) {
+            tracks[idx].clips.removeAll()
+        }
     }
 
     func updateTextPosition(trackIndex: Int, clipIndex: Int, position: CGPoint) {

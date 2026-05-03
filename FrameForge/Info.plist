@@ -18,5 +18,7 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>FrameForge uses speech recognition to generate automatic captions from your video audio.</string>
 </dict>
 </plist>

@@ -33,6 +33,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showStickerPicker) {
             StickersView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showCaptionsView) {
+            CaptionsView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -43,6 +46,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Text", icon: "textformat", color: .white) {
                     viewModel.showTextEditor = true
+                }
+                toolButton("Captions", icon: "captions.bubble", color: .white) {
+                    viewModel.showCaptionsView = true
                 }
                 toolButton("Music", icon: "music.note", color: .white) {
                     viewModel.showAudioBrowser = true
