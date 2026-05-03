@@ -14,5 +14,7 @@ targets:
       - FrameForge
     info:
       path: FrameForge/Info.plist
+      properties:
+        GADApplicationIdentifier: ca-app-pub-8035596577604363~8815402433
     dependencies:
       - package: GoogleMobileAds
