@@ -24,6 +24,7 @@ final class EditorViewModel {
     var showStickerPicker = false
     var showCaptionsView = false
     var showBackgroundRemoval = false
+    var showKeyframeEditor = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()
@@ -737,6 +738,52 @@ final class EditorViewModel {
         if let idx = tracks.firstIndex(where: { $0.type == .text }) {
             tracks[idx].clips.removeAll()
         }
+    }
+
+    func addKeyframe(at time: Double, forClip clipID: UUID) {
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        if tracks[ti].clips[ci].keyframeAnimation == nil {
+            tracks[ti].clips[ci].keyframeAnimation = KeyframeAnimation()
+        }
+        tracks[ti].clips[ci].keyframeAnimation?.addKeyframe(at: time)
+    }
+
+    func removeKeyframe(id: UUID, fromClip clipID: UUID) {
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        tracks[ti].clips[ci].keyframeAnimation?.removeKeyframe(id: id)
+    }
+
+    func setKeyframeEasing(_ easing: KeyframeEasing, forClip clipID: UUID) {
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        tracks[ti].clips[ci].keyframeAnimation?.easing = easing
+    }
+
+    func updateKeyframeAtPlayhead(_ time: Double, forClip clipID: UUID, modify: (inout Keyframe) -> Void) {
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        if tracks[ti].clips[ci].keyframeAnimation == nil {
+            tracks[ti].clips[ci].keyframeAnimation = KeyframeAnimation()
+        }
+        var anim = tracks[ti].clips[ci].keyframeAnimation!
+        if let idx = anim.keyframes.firstIndex(where: { abs($0.time - time) < 0.05 }) {
+            modify(&anim.keyframes[idx])
+        } else {
+            var kf = anim.interpolated(at: time) ?? Keyframe(time: time)
+            kf = Keyframe(time: time, positionX: kf.positionX, positionY: kf.positionY,
+                          scale: kf.scale, rotation: kf.rotation, opacity: kf.opacity)
+            modify(&kf)
+            anim.keyframes.append(kf)
+            anim.keyframes.sort { $0.time < $1.time }
+        }
+        tracks[ti].clips[ci].keyframeAnimation = anim
+    }
+
+    private func findClipIndices(_ clipID: UUID) -> (Int, Int)? {
+        for (ti, track) in tracks.enumerated() {
+            if let ci = track.clips.firstIndex(where: { $0.id == clipID }) {
+                return (ti, ci)
+            }
+        }
+        return nil
     }
 
     func updateTextPosition(trackIndex: Int, clipIndex: Int, position: CGPoint) {

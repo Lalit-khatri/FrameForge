@@ -39,6 +39,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showBackgroundRemoval) {
             BackgroundRemovalView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showKeyframeEditor) {
+            KeyframeEditorView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -64,6 +67,9 @@ struct ToolbarView: View {
                 }
                 toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
                     viewModel.showBackgroundRemoval = true
+                }
+                toolButton("Keyframe", icon: "diamond", color: .white) {
+                    viewModel.showKeyframeEditor = true
                 }
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true

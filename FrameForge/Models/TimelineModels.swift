@@ -64,6 +64,7 @@ struct TimelineClip: Identifiable, Codable {
     var thumbnailData: Data?
     var colorAdjustments: ColorAdjustments?
     var isMuted: Bool
+    var keyframeAnimation: KeyframeAnimation?
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)
@@ -92,6 +93,7 @@ struct TimelineClip: Identifiable, Codable {
         self.transitionDuration = 0.3
         self.effects = []
         self.isMuted = false
+        self.keyframeAnimation = nil
     }
 }
 
