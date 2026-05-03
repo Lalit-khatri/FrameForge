@@ -36,6 +36,7 @@ final class EditorViewModel {
     var showChromaKey = false
     var showCurveSpeed = false
     var showAspectRatio = false
+    var showPhotoImport = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

@@ -69,6 +69,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showCurveSpeed) {
             CurveSpeedView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showPhotoImport) {
+            PhotoImportView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -76,6 +79,9 @@ struct ToolbarView: View {
             HStack(spacing: 18) {
                 toolButton("Import", icon: "plus.circle.fill", color: Color(red: 0.42, green: 0.36, blue: 0.91)) {
                     onAddMedia()
+                }
+                toolButton("Photos", icon: "photo.badge.plus", color: .white) {
+                    viewModel.showPhotoImport = true
                 }
                 toolButton("Text", icon: "textformat", color: .white) {
                     viewModel.showTextEditor = true
