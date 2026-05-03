@@ -74,6 +74,16 @@ struct TransitionType: Identifiable {
         TransitionType(id: "flash", name: "Flash", icon: "bolt.fill", defaultDuration: 0.3),
         TransitionType(id: "spin", name: "Spin", icon: "arrow.triangle.2.circlepath", defaultDuration: 0.6),
         TransitionType(id: "glitch", name: "Glitch", icon: "waveform.path", defaultDuration: 0.4),
+        TransitionType(id: "fade-black", name: "Fade Black", icon: "circle.fill", defaultDuration: 0.5),
+        TransitionType(id: "fade-white", name: "Fade White", icon: "circle", defaultDuration: 0.5),
+        TransitionType(id: "push-left", name: "Push Left", icon: "arrow.backward.to.line", defaultDuration: 0.4),
+        TransitionType(id: "push-right", name: "Push Right", icon: "arrow.forward.to.line", defaultDuration: 0.4),
+        TransitionType(id: "iris", name: "Iris", icon: "camera.aperture", defaultDuration: 0.6),
+        TransitionType(id: "morph", name: "Morph", icon: "wand.and.rays", defaultDuration: 0.7),
+        TransitionType(id: "page-curl", name: "Page Curl", icon: "book.pages", defaultDuration: 0.6),
+        TransitionType(id: "ripple", name: "Ripple", icon: "water.waves", defaultDuration: 0.6),
+        TransitionType(id: "swirl", name: "Swirl", icon: "tornado", defaultDuration: 0.5),
+        TransitionType(id: "pixelate", name: "Pixelate", icon: "square.grid.3x3", defaultDuration: 0.5),
     ]
 }
 
@@ -103,6 +113,14 @@ struct ExportSettings: Codable {
         self.quality = .high
         self.codec = mgr.defaultCodec
         self.includeAudio = true
+    }
+
+    init(resolution: ExportResolution, frameRate: Int, codec: VideoCodec, includeAudio: Bool) {
+        self.resolution = resolution
+        self.frameRate = frameRate
+        self.quality = .high
+        self.codec = codec
+        self.includeAudio = includeAudio
     }
 }
 

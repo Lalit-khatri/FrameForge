@@ -32,6 +32,8 @@ final class EditorViewModel {
     var showCloudBackup = false
     var showShareView = false
     var showPlugins = false
+    var showVoiceover = false
+    var showChromaKey = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()
@@ -75,10 +77,11 @@ final class EditorViewModel {
     private var autoSaveTimer: Timer?
     private var undoStack: [Data] = []
     private var redoStack: [Data] = []
-    private weak var currentProject: Project?
+    private let maxUndoLevels = 30
 
     var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
+    private weak var currentProject: Project?
 
     var selectedClip: TimelineClip? {
         for track in tracks {
@@ -796,6 +799,43 @@ final class EditorViewModel {
     func applyMotionTrack(_ data: MotionTrackData, toClip clipID: UUID) {
         guard let (ti, ci) = findClipIndices(clipID) else { return }
         tracks[ti].clips[ci].motionTrack = data
+    }
+
+    func addFreezeFrame() {
+        guard let clip = selectedClip else { return }
+        saveState()
+        var freezeClip = TimelineClip(assetURL: clip.assetURL, startTime: clip.endTime, duration: 2.0, originalDuration: 2.0)
+        freezeClip.trimStart = currentTime - clip.startTime
+        freezeClip.trimEnd = clip.duration - (currentTime - clip.startTime) - 0.03
+        freezeClip.speed = 0.001
+        if let trackIdx = tracks.firstIndex(where: { $0.type == .video }) {
+            tracks[trackIdx].clips.append(freezeClip)
+            recalculateStartTimes()
+            Task { await rebuildComposition() }
+        }
+    }
+
+    func addVoiceoverClip(url: URL, duration: Double) {
+        saveState()
+        let clip = TimelineClip(assetURL: url, startTime: currentTime, duration: duration, originalDuration: duration)
+        if let audioTrackIdx = tracks.firstIndex(where: { $0.type == .audio }) {
+            tracks[audioTrackIdx].clips.append(clip)
+        } else {
+            var audioTrack = TimelineTrack(type: .audio)
+            audioTrack.clips.append(clip)
+            tracks.append(audioTrack)
+        }
+        recalculateStartTimes()
+        Task { await rebuildComposition() }
+    }
+
+    func applyChromaKey(color: ChromaKeyColor, threshold: Float, toClip clipID: UUID) {
+        saveState()
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        let effect = ClipEffect(type: .backgroundRemoval, intensity: threshold)
+        if !tracks[ti].clips[ci].effects.contains(where: { $0.type == .backgroundRemoval }) {
+            tracks[ti].clips[ci].effects.append(effect)
+        }
     }
 
     func updateTextPosition(trackIndex: Int, clipIndex: Int, position: CGPoint) {

@@ -74,6 +74,24 @@ struct EditorView: View {
 
             Spacer(minLength: 4)
 
+            HStack(spacing: 2) {
+                Button(action: { viewModel.undo() }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.subheadline)
+                        .foregroundColor(viewModel.canUndo ? .white : .gray.opacity(0.3))
+                }
+                .disabled(!viewModel.canUndo)
+
+                Button(action: { viewModel.redo() }) {
+                    Image(systemName: "arrow.uturn.forward")
+                        .font(.subheadline)
+                        .foregroundColor(viewModel.canRedo ? .white : .gray.opacity(0.3))
+                }
+                .disabled(!viewModel.canRedo)
+            }
+
+            Spacer(minLength: 4)
+
             Button(action: { viewModel.showExportSheet = true }) {
                 HStack(spacing: 4) {
                     Image(systemName: "square.and.arrow.up")

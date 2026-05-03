@@ -60,6 +60,12 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showPlugins) {
             PluginStoreView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showVoiceover) {
+            VoiceoverView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.showChromaKey) {
+            ChromaKeyView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -110,6 +116,12 @@ struct ToolbarView: View {
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true
                 }
+                toolButton("Voiceover", icon: "mic.fill", color: .white) {
+                    viewModel.showVoiceover = true
+                }
+                toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
+                    viewModel.showChromaKey = true
+                }
                 toolButton("Layer", icon: "square.3.layers.3d", color: .white) {
                     viewModel.addVideoTrack()
                 }
@@ -146,6 +158,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()
+                }
+                toolButton("Freeze", icon: "pause.rectangle", color: .white) {
+                    viewModel.addFreezeFrame()
                 }
                 toolButton("Delete", icon: "trash", color: .red) {
                     viewModel.deleteSelectedClip()
