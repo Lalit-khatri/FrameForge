@@ -4,6 +4,21 @@
 <dict>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8035596577604363~8815402433</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FrameForge needs access to your photo library to import videos and images for editing.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FrameForge needs permission to save exported videos to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FrameForge needs microphone access to record voiceovers for your projects.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>FrameForge uses speech recognition to auto-generate captions from your video audio.</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>

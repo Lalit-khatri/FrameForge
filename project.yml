@@ -16,5 +16,11 @@ targets:
       path: FrameForge/Info.plist
       properties:
         GADApplicationIdentifier: ca-app-pub-8035596577604363~8815402433
+        NSPhotoLibraryUsageDescription: FrameForge needs access to your photo library to import videos and images for editing.
+        NSPhotoLibraryAddUsageDescription: FrameForge needs permission to save exported videos to your photo library.
+        NSMicrophoneUsageDescription: FrameForge needs microphone access to record voiceovers for your projects.
+        NSSpeechRecognitionUsageDescription: FrameForge uses speech recognition to auto-generate captions from your video audio.
+    entitlements:
+      path: FrameForge/FrameForge.entitlements
     dependencies:
       - package: GoogleMobileAds
