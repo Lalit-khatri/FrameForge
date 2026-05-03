@@ -1,0 +1,80 @@
+{
+  "identifier" : "com.frameforge",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "14.99",
+      "familyShareable" : false,
+      "internalID" : "1",
+      "localizations" : [
+        {
+          "description" : "Unlock 4K export, 10 projects, and remove ads forever.",
+          "displayName" : "FrameForge Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.frameforge.pro",
+      "referenceName" : "FrameForge Pro",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "2",
+      "localizations" : [
+        {
+          "description" : "Buy the developer a coffee.",
+          "displayName" : "Coffee Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.frameforge.tip.small",
+      "referenceName" : "Coffee Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "3",
+      "localizations" : [
+        {
+          "description" : "Buy the developer a pizza.",
+          "displayName" : "Pizza Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.frameforge.tip.medium",
+      "referenceName" : "Pizza Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "4",
+      "localizations" : [
+        {
+          "description" : "Buy the developer some studio time.",
+          "displayName" : "Studio Time Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.frameforge.tip.large",
+      "referenceName" : "Studio Time Tip",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_lastCheckedDate" : null,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
