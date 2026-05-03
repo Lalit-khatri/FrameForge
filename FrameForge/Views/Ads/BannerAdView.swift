@@ -4,19 +4,19 @@ import GoogleMobileAds
 struct BannerAdView: UIViewRepresentable {
     let adUnitID: String
 
-    func makeUIView(context: Context) -> GADBannerView {
-        let banner = GADBannerView()
+    func makeUIView(context: Context) -> BannerView {
+        let banner = BannerView()
         banner.adUnitID = adUnitID
         banner.backgroundColor = .clear
         return banner
     }
 
-    func updateUIView(_ uiView: GADBannerView, context: Context) {
+    func updateUIView(_ uiView: BannerView, context: Context) {
         if uiView.rootViewController == nil {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let rootVC = windowScene.windows.first?.rootViewController {
                 uiView.rootViewController = rootVC
-                let request = GADRequest()
+                let request = Request()
                 uiView.load(request)
             }
         }
