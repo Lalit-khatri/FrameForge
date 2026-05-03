@@ -20,6 +20,7 @@ struct EditorView: View {
                 TimelineView(viewModel: viewModel)
                     .frame(maxHeight: .infinity)
                 toolbarSection
+                AdBannerContainer()
                     .padding(.bottom, geo.safeAreaInsets.bottom)
             }
             .background(Color.black)

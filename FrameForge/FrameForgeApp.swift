@@ -4,6 +4,7 @@ import AVFoundation
 
 @main
 struct FrameForgeApp: App {
+    @StateObject private var storeKit = StoreKitManager.shared
 
     init() {
         let session = AVAudioSession.sharedInstance()
@@ -13,12 +14,14 @@ struct FrameForgeApp: App {
         } catch {
             print("Audio session setup failed: \(error)")
         }
+        StoreKitManager.shared.start()
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .environmentObject(storeKit)
         }
         .modelContainer(for: [Project.self])
     }

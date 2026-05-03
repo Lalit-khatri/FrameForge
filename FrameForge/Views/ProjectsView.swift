@@ -10,8 +10,10 @@ struct ProjectsView: View {
     @State private var showSettings = false
     @State private var showAbout = false
     @State private var showProjectLimitAlert = false
+    @State private var showProUpgrade = false
+    @ObservedObject private var store = StoreKitManager.shared
 
-    private let maxFreeProjects = 5
+    private var maxProjects: Int { store.isPro ? 10 : 5 }
 
     var onSelectProject: (Project) -> Void
 
@@ -44,9 +46,17 @@ struct ProjectsView: View {
             AboutView()
         }
         .alert("Project Limit Reached", isPresented: $showProjectLimitAlert) {
+            if !store.isPro {
+                Button("Upgrade to Pro") { showProUpgrade = true }
+            }
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Free accounts can save up to \(maxFreeProjects) projects. Delete an existing project or upgrade to Pro for unlimited projects.")
+            Text(store.isPro
+                 ? "Pro accounts can save up to 10 projects. Delete an existing project to create a new one."
+                 : "Free accounts can save up to 5 projects. Upgrade to Pro for 10 projects, or delete an existing one.")
+        }
+        .sheet(isPresented: $showProUpgrade) {
+            ProUpgradeView()
         }
     }
 
@@ -90,7 +100,7 @@ struct ProjectsView: View {
 
     private var newProjectButton: some View {
         Button(action: {
-            if projects.count >= maxFreeProjects {
+            if projects.count >= maxProjects {
                 showProjectLimitAlert = true
                 return
             }

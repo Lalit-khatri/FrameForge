@@ -4,6 +4,8 @@ struct ExportView: View {
     @Bindable var viewModel: EditorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var settings = ExportSettings()
+    @State private var showProUpgrade = false
+    @ObservedObject private var store = StoreKitManager.shared
 
     var body: some View {
         NavigationStack {
@@ -101,20 +103,36 @@ struct ExportView: View {
     private var resolutionPicker: some View {
         HStack(spacing: 8) {
             ForEach(ExportResolution.allCases, id: \.self) { res in
-                Button(action: { settings.resolution = res }) {
-                    Text(res.displayName)
-                        .font(.caption.bold())
-                        .foregroundColor(settings.resolution == res ? .white : .gray)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            settings.resolution == res
-                            ? Color(red: 0.42, green: 0.36, blue: 0.91)
-                            : Color.white.opacity(0.08)
-                        )
-                        .cornerRadius(10)
+                let isLocked = !store.isPro && (res == .qhd1440p || res == .uhd4k)
+                Button(action: {
+                    if isLocked {
+                        showProUpgrade = true
+                    } else {
+                        settings.resolution = res
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Text(res.displayName)
+                            .font(.caption.bold())
+                        if isLocked {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 8))
+                        }
+                    }
+                    .foregroundColor(settings.resolution == res ? .white : (isLocked ? .gray.opacity(0.5) : .gray))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        settings.resolution == res
+                        ? Color(red: 0.42, green: 0.36, blue: 0.91)
+                        : Color.white.opacity(0.08)
+                    )
+                    .cornerRadius(10)
                 }
             }
+        }
+        .sheet(isPresented: $showProUpgrade) {
+            ProUpgradeView()
         }
     }
 
@@ -277,6 +295,9 @@ struct ExportView: View {
                     .font(.subheadline)
                     .foregroundColor(.red)
             }
+
+            AdBannerContainer()
+                .padding(.top, 12)
         }
     }
 
@@ -327,6 +348,9 @@ struct ExportView: View {
                 }
             }
             .padding(.horizontal, 40)
+
+            NativeAdCardView()
+                .padding(.top, 8)
         }
     }
 

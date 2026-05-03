@@ -15,6 +15,9 @@ struct SettingsView: View {
     @State private var cacheSize: String = "Calculating..."
     @State private var showResetConfirmation = false
     @State private var showClearCacheConfirmation = false
+    @State private var showProUpgrade = false
+    @State private var showTipJar = false
+    @ObservedObject private var store = StoreKitManager.shared
 
     private let settings = SettingsManager.shared
 
@@ -35,10 +38,13 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                proSection
                 projectDefaults
                 editorPreferences
                 previewSection
+                tipJarSection
                 storageSection
+                restoreSection
                 resetSection
             }
             .scrollContentBackground(.hidden)
@@ -64,7 +70,60 @@ struct SettingsView: View {
             } message: {
                 Text("This will remove all cached data including thumbnails. They will be regenerated as needed.")
             }
+            .sheet(isPresented: $showProUpgrade) {
+                ProUpgradeView()
+            }
+            .sheet(isPresented: $showTipJar) {
+                TipJarView()
+            }
         }
+    }
+
+    private var proSection: some View {
+        Section {
+            if store.isPro {
+                HStack {
+                    Image(systemName: "crown.fill")
+                        .foregroundColor(.yellow)
+                    Text("FrameForge Pro")
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text("Active")
+                        .font(.caption.bold())
+                        .foregroundColor(.green)
+                }
+            } else {
+                Button(action: { showProUpgrade = true }) {
+                    HStack {
+                        Image(systemName: "crown.fill")
+                            .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Upgrade to Pro")
+                                .font(.subheadline.bold())
+                                .foregroundColor(.white)
+                            Text("4K export, 10 projects, no ads")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        Spacer()
+                        Text(store.proProduct?.displayPrice ?? "$14.99")
+                            .font(.subheadline.bold())
+                            .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
+                    }
+                }
+            }
+        } header: {
+            Label("Pro", systemImage: "star.fill")
+                .foregroundColor(.gray)
+        }
+        .listRowBackground(
+            LinearGradient(
+                colors: [Color(red: 0.42, green: 0.36, blue: 0.91).opacity(0.12),
+                         Color.white.opacity(0.05)],
+                startPoint: .leading, endPoint: .trailing
+            )
+        )
     }
 
     private var projectDefaults: some View {
@@ -214,6 +273,50 @@ struct SettingsView: View {
         .listRowBackground(Color.white.opacity(0.05))
     }
 
+    private var tipJarSection: some View {
+        Section {
+            Button(action: { showTipJar = true }) {
+                HStack {
+                    Text("❤️")
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tip Jar")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.white)
+                        Text("Support indie development")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+            }
+        } header: {
+            Label("Support", systemImage: "heart.fill")
+                .foregroundColor(.gray)
+        }
+        .listRowBackground(Color.white.opacity(0.05))
+    }
+
+    private var restoreSection: some View {
+        Section {
+            Button(action: {
+                Task { await store.restorePurchases() }
+            }) {
+                HStack {
+                    Text("Restore Purchases")
+                        .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
+                    Spacer()
+                    Image(systemName: "arrow.clockwise")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .listRowBackground(Color.white.opacity(0.05))
+    }
+
     private func calculateCacheSize() {
         DispatchQueue.global(qos: .utility).async {
             let size = settings.formattedCacheSize()
@@ -325,6 +428,36 @@ struct AboutView: View {
                         Text("Made with ❤️ for creators")
                             .font(.caption)
                             .foregroundColor(.gray.opacity(0.5))
+
+                        if StoreKitManager.shared.hasTipped {
+                            HStack(spacing: 4) {
+                                Image(systemName: "heart.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.pink)
+                                Text("Supporter")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.pink)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(Color.pink.opacity(0.15))
+                            .cornerRadius(8)
+                        }
+
+                        if StoreKitManager.shared.isPro {
+                            HStack(spacing: 4) {
+                                Image(systemName: "crown.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.yellow)
+                                Text("Pro")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.yellow)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(Color.yellow.opacity(0.15))
+                            .cornerRadius(8)
+                        }
                             .padding(.bottom, 20)
                     }
                 }
