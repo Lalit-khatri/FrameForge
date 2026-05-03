@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
+import GoogleMobileAds
 
 @main
 struct FrameForgeApp: App {
@@ -15,6 +16,7 @@ struct FrameForgeApp: App {
             print("Audio session setup failed: \(error)")
         }
         StoreKitManager.shared.start()
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
     }
 
     var body: some Scene {
