@@ -75,6 +75,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showPiP) {
             PictureInPictureView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showStabilization) {
+            VideoStabilizationView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -176,6 +179,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Reverse", icon: "arrow.uturn.backward", color: .white) {
                     if let id = viewModel.selectedClipID { viewModel.reverseClip(clipID: id) }
+                }
+                toolButton("Stabilize", icon: "hand.raised", color: .white) {
+                    viewModel.showStabilization = true
                 }
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()
