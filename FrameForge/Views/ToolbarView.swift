@@ -66,6 +66,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showChromaKey) {
             ChromaKeyView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showCurveSpeed) {
+            CurveSpeedView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -121,6 +124,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
                     viewModel.showChromaKey = true
+                }
+                toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
+                    viewModel.showCurveSpeed = true
                 }
                 toolButton("Layer", icon: "square.3.layers.3d", color: .white) {
                     viewModel.addVideoTrack()
