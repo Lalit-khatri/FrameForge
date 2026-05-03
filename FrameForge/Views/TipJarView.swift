@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct TipJarView: View {
     @Environment(\.dismiss) private var dismiss

@@ -90,7 +90,7 @@ final class EditorViewModel {
 
     var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
-    private weak var currentProject: Project?
+    weak var currentProject: Project?
 
     var selectedClip: TimelineClip? {
         for track in tracks {
@@ -808,7 +808,7 @@ final class EditorViewModel {
         tracks[ti].clips[ci].keyframeAnimation = anim
     }
 
-    private func findClipIndices(_ clipID: UUID) -> (Int, Int)? {
+    func findClipIndices(_ clipID: UUID) -> (Int, Int)? {
         for (ti, track) in tracks.enumerated() {
             if let ci = track.clips.firstIndex(where: { $0.id == clipID }) {
                 return (ti, ci)

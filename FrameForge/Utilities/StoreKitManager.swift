@@ -79,7 +79,7 @@ final class StoreKitManager: ObservableObject {
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached {
             for await result in Transaction.updates {
-                if let transaction = try? self.checkVerified(result) {
+                if let transaction = try? await self.checkVerified(result) {
                     await self.handleTransaction(transaction)
                     await transaction.finish()
                 }
