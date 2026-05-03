@@ -65,6 +65,7 @@ struct TimelineClip: Identifiable, Codable {
     var colorAdjustments: ColorAdjustments?
     var isMuted: Bool
     var keyframeAnimation: KeyframeAnimation?
+    var motionTrack: MotionTrackData?
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)
@@ -94,6 +95,7 @@ struct TimelineClip: Identifiable, Codable {
         self.effects = []
         self.isMuted = false
         self.keyframeAnimation = nil
+        self.motionTrack = nil
     }
 }
 

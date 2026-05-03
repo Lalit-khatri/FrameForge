@@ -42,6 +42,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showKeyframeEditor) {
             KeyframeEditorView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showMotionTracking) {
+            MotionTrackingView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -70,6 +73,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Keyframe", icon: "diamond", color: .white) {
                     viewModel.showKeyframeEditor = true
+                }
+                toolButton("Track", icon: "scope", color: .white) {
+                    viewModel.showMotionTracking = true
                 }
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true

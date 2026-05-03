@@ -25,6 +25,7 @@ final class EditorViewModel {
     var showCaptionsView = false
     var showBackgroundRemoval = false
     var showKeyframeEditor = false
+    var showMotionTracking = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()
@@ -784,6 +785,11 @@ final class EditorViewModel {
             }
         }
         return nil
+    }
+
+    func applyMotionTrack(_ data: MotionTrackData, toClip clipID: UUID) {
+        guard let (ti, ci) = findClipIndices(clipID) else { return }
+        tracks[ti].clips[ci].motionTrack = data
     }
 
     func updateTextPosition(trackIndex: Int, clipIndex: Int, position: CGPoint) {
