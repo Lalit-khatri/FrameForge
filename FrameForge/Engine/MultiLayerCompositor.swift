@@ -655,8 +655,8 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
                 let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
                 try? handler.perform([request])
 
-                guard let maskObs = request.results?.first,
-                      let maskBuffer = maskObs.pixelBuffer else { break }
+                guard let maskObs = request.results?.first else { break }
+                let maskBuffer = maskObs.pixelBuffer
 
                 let maskCI = CIImage(cvPixelBuffer: maskBuffer)
                 let scaleX = extent.width / maskCI.extent.width

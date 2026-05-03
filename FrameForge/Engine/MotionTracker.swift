@@ -90,8 +90,8 @@ final class MotionTracker {
         generator.maximumSize = CGSize(width: 640, height: 640)
 
         let observation = VNDetectedObjectObservation(boundingBox: region)
-        let request = VNTrackObjectRequest(detectedObject: observation)
-        request.trackingLevel = .fast
+        let request = VNTrackObjectRequest(detectedObjectObservation: observation)
+        request.trackingLevel = VNRequestTrackingLevel.fast
 
         let sequenceHandler = VNSequenceRequestHandler()
 

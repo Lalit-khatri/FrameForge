@@ -229,6 +229,9 @@ struct EffectsView: View {
         case .denoise: return "ear.trianglebadge.exclamationmark"
         case .mosaic: return "square.grid.4x3.fill"
         case .backgroundRemoval: return "person.crop.rectangle"
+        case .stabilize: return "hand.raised.fill"
+        case .noiseReduction: return "waveform.path.ecg"
+        case .mask: return "theatermask.and.paintbrush"
         }
     }
 }

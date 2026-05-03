@@ -457,8 +457,8 @@ struct AboutView: View {
                             .padding(.vertical, 4)
                             .background(Color.yellow.opacity(0.15))
                             .cornerRadius(8)
-                        }
                             .padding(.bottom, 20)
+                        }
                     }
                 }
             }
