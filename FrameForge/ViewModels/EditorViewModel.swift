@@ -40,6 +40,7 @@ final class EditorViewModel {
     var showPiP = false
     var showStabilization = false
     var showNoiseReduction = false
+    var showBeatSync = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

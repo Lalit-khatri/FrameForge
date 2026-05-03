@@ -81,6 +81,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showNoiseReduction) {
             NoiseReductionView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showBeatSync) {
+            BeatSyncView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -100,6 +103,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Music", icon: "music.note", color: .white) {
                     viewModel.showAudioBrowser = true
+                }
+                toolButton("Beat Sync", icon: "metronome", color: .white) {
+                    viewModel.showBeatSync = true
                 }
                 toolButton("Filters", icon: "camera.filters", color: .white) {
                     viewModel.showFiltersPanel = true
