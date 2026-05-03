@@ -78,6 +78,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showStabilization) {
             VideoStabilizationView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showNoiseReduction) {
+            NoiseReductionView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -182,6 +185,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Stabilize", icon: "hand.raised", color: .white) {
                     viewModel.showStabilization = true
+                }
+                toolButton("Denoise", icon: "waveform.badge.minus", color: .white) {
+                    viewModel.showNoiseReduction = true
                 }
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()
