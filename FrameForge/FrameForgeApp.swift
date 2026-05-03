@@ -16,7 +16,7 @@ struct FrameForgeApp: App {
             print("Audio session setup failed: \(error)")
         }
         StoreKitManager.shared.start()
-        MobileAds.sharedInstance.start()
+        MobileAds.shared.start()
     }
 
     var body: some Scene {
