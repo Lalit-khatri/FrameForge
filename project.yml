@@ -1,6 +1,10 @@
 name: FrameForge
 options:
   bundleIdPrefix: com.lalitkhatri
+packages:
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads
+    majorVersion: 13.3.0
 targets:
   FrameForge:
     type: application
@@ -10,3 +14,5 @@ targets:
       - FrameForge
     info:
       path: FrameForge/Info.plist
+    dependencies:
+      - package: GoogleMobileAds
