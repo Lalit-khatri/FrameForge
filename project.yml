@@ -1,18 +1,12 @@
-# Xcode
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
-DerivedData/
-build/
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
-*.xcodeproj
-
-# macOS
-.DS_Store
-*.swp
-*~
-
-# Secrets
-Secrets.xcconfig
+name: FrameForge
+options:
+  bundleIdPrefix: com.lalitkhatri
+targets:
+  FrameForge:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - FrameForge
+    info:
+      path: FrameForge/Info.plist
