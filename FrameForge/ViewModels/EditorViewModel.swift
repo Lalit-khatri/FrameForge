@@ -685,6 +685,18 @@ final class EditorViewModel {
         }
     }
 
+    func reverseClip(clipID: UUID) {
+        saveState()
+        for i in 0..<tracks.count {
+            if let j = tracks[i].clips.firstIndex(where: { $0.id == clipID }) {
+                tracks[i].clips[j].isReversed.toggle()
+                Task { await rebuildComposition() }
+                HapticManager.shared.medium()
+                return
+            }
+        }
+    }
+
     func setTrackVolume(_ volume: Float, trackID: UUID) {
         guard let idx = tracks.firstIndex(where: { $0.id == trackID }) else { return }
         tracks[idx].volume = max(0, min(2.0, volume))

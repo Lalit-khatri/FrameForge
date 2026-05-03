@@ -174,6 +174,9 @@ struct ToolbarView: View {
                 toolButton("PiP", icon: "pip", color: .white) {
                     viewModel.showPiP = true
                 }
+                toolButton("Reverse", icon: "arrow.uturn.backward", color: .white) {
+                    if let id = viewModel.selectedClipID { viewModel.reverseClip(clipID: id) }
+                }
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()
                 }

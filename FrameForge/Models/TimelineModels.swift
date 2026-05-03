@@ -68,6 +68,7 @@ struct TimelineClip: Identifiable, Codable {
     var motionTrack: MotionTrackData?
     var pipPosition: String?
     var pipScale: Float?
+    var isReversed: Bool = false
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)
