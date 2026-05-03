@@ -1,0 +1,76 @@
+/* FrameForge Localizable Strings */
+
+/* Toolbar */
+"toolbar.import" = "Import";
+"toolbar.photos" = "Photos";
+"toolbar.text" = "Text";
+"toolbar.stickers" = "Stickers";
+"toolbar.captions" = "Captions";
+"toolbar.music" = "Music";
+"toolbar.beatSync" = "Beat Sync";
+"toolbar.filters" = "Filters";
+"toolbar.effects" = "Effects";
+"toolbar.bgRemove" = "BG Remove";
+"toolbar.keyframe" = "Keyframe";
+"toolbar.track" = "Track";
+"toolbar.3dText" = "3D Text";
+"toolbar.lut" = "LUT";
+"toolbar.split" = "Split";
+"toolbar.cloud" = "Cloud";
+"toolbar.share" = "Share";
+"toolbar.plugins" = "Plugins";
+"toolbar.voiceover" = "Voiceover";
+"toolbar.chromaKey" = "Green Screen";
+"toolbar.speed" = "Speed";
+"toolbar.aspectRatio" = "Ratio";
+"toolbar.export" = "Export";
+"toolbar.socialExport" = "Social";
+
+/* Edit Toolbar */
+"edit.trim" = "Trim";
+"edit.crop" = "Crop";
+"edit.speed" = "Speed";
+"edit.volume" = "Volume";
+"edit.filters" = "Filters";
+"edit.effects" = "Effects";
+"edit.mask" = "Mask";
+"edit.transition" = "Transition";
+"edit.pip" = "PiP";
+"edit.reverse" = "Reverse";
+"edit.stabilize" = "Stabilize";
+"edit.denoise" = "Denoise";
+"edit.duplicate" = "Duplicate";
+"edit.freeze" = "Freeze";
+"edit.delete" = "Delete";
+"edit.deselect" = "Deselect";
+
+/* Actions */
+"action.apply" = "Apply";
+"action.cancel" = "Cancel";
+"action.export" = "Export";
+"action.save" = "Save";
+"action.delete" = "Delete";
+"action.undo" = "Undo";
+"action.redo" = "Redo";
+
+/* Features */
+"feature.stabilization" = "Stabilization";
+"feature.noiseReduction" = "Noise Reduction";
+"feature.beatSync" = "Beat Sync";
+"feature.splitScreen" = "Split Screen";
+"feature.masking" = "Masking";
+"feature.pip" = "Picture in Picture";
+"feature.photoImport" = "Import Photos";
+"feature.curveSpeed" = "Speed Curves";
+"feature.aspectRatio" = "Aspect Ratio";
+"feature.socialExport" = "Social Export";
+"feature.voiceover" = "Voiceover";
+"feature.chromaKey" = "Chroma Key";
+
+/* Onboarding */
+"onboarding.welcome" = "Welcome to FrameForge";
+"onboarding.timeline" = "Multi-Track Timeline";
+"onboarding.effects" = "Pro Effects & Filters";
+"onboarding.export" = "Export Anywhere";
+"onboarding.getStarted" = "Get Started";
+"onboarding.skip" = "Skip";
