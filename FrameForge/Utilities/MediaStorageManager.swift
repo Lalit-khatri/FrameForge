@@ -45,4 +45,14 @@ final class MediaStorageManager {
     func mediaExists(at url: URL) -> Bool {
         fileManager.fileExists(atPath: url.path)
     }
+
+    func resolveMediaURL(_ url: URL, projectID: UUID) -> URL {
+        if fileManager.fileExists(atPath: url.path) { return url }
+        let fileName = url.lastPathComponent
+        let resolved = mediaDirectory
+            .appendingPathComponent(projectID.uuidString, isDirectory: true)
+            .appendingPathComponent(fileName)
+        if fileManager.fileExists(atPath: resolved.path) { return resolved }
+        return url
+    }
 }

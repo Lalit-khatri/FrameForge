@@ -9,6 +9,9 @@ struct ProjectsView: View {
     @State private var selectedAspectRatio: AspectRatio = .landscape16x9
     @State private var showSettings = false
     @State private var showAbout = false
+    @State private var showProjectLimitAlert = false
+
+    private let maxFreeProjects = 5
 
     var onSelectProject: (Project) -> Void
 
@@ -39,6 +42,11 @@ struct ProjectsView: View {
         }
         .sheet(isPresented: $showAbout) {
             AboutView()
+        }
+        .alert("Project Limit Reached", isPresented: $showProjectLimitAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Free accounts can save up to \(maxFreeProjects) projects. Delete an existing project or upgrade to Pro for unlimited projects.")
         }
     }
 
@@ -82,6 +90,10 @@ struct ProjectsView: View {
 
     private var newProjectButton: some View {
         Button(action: {
+            if projects.count >= maxFreeProjects {
+                showProjectLimitAlert = true
+                return
+            }
             newProjectName = ""
             selectedAspectRatio = .landscape16x9
             showNewProject = true

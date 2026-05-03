@@ -132,8 +132,15 @@ final class EditorViewModel {
         if let data = project.trackData {
             if let decoded = try? JSONDecoder().decode([TimelineTrack].self, from: data) {
                 tracks = decoded
-                for i in 0..<tracks.count where (tracks[i].type == .video || tracks[i].type == .overlay) && tracks[i].transform == nil {
-                    tracks[i].transform = .fullFrame
+                for i in 0..<tracks.count {
+                    if (tracks[i].type == .video || tracks[i].type == .overlay) && tracks[i].transform == nil {
+                        tracks[i].transform = .fullFrame
+                    }
+                    for j in 0..<tracks[i].clips.count {
+                        if let url = tracks[i].clips[j].assetURL {
+                            tracks[i].clips[j].assetURL = MediaStorageManager.shared.resolveMediaURL(url, projectID: project.id)
+                        }
+                    }
                 }
                 recalculateStartTimes()
                 Task { await rebuildComposition() }
