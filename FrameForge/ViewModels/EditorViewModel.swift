@@ -29,6 +29,9 @@ final class EditorViewModel {
     var showLUTImport = false
     var show3DText = false
     var currentLUT: LUTData?
+    var showCloudBackup = false
+    var showShareView = false
+    var showPlugins = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

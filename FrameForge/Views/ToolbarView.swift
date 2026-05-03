@@ -51,6 +51,15 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.show3DText) {
             Text3DView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showCloudBackup) {
+            CloudBackupView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.showShareView) {
+            ShareView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.showPlugins) {
+            PluginStoreView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -88,6 +97,15 @@ struct ToolbarView: View {
                 }
                 toolButton("LUT", icon: "paintpalette", color: .white) {
                     viewModel.showLUTImport = true
+                }
+                toolButton("Cloud", icon: "icloud", color: .white) {
+                    viewModel.showCloudBackup = true
+                }
+                toolButton("Share", icon: "square.and.arrow.up", color: .white) {
+                    viewModel.showShareView = true
+                }
+                toolButton("Plugins", icon: "puzzlepiece", color: .white) {
+                    viewModel.showPlugins = true
                 }
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true
