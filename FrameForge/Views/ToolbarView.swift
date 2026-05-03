@@ -237,7 +237,11 @@ struct ToolbarView: View {
                 Text(title)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.gray)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
         }
+        .accessibilityLabel(title)
+        .accessibilityHint("Activate \(title) tool")
     }
 }
