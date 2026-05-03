@@ -1,38 +1,31 @@
 import SwiftUI
-import GoogleMobileAds
 
-struct BannerAdView: UIViewRepresentable {
-    let adUnitID: String
+struct AdBannerContainer: View {
+    @ObservedObject private var store = StoreKitManager.shared
 
-    func makeUIView(context: Context) -> GADBannerView {
-        let banner = GADBannerView()
-        banner.adUnitID = adUnitID
-        banner.backgroundColor = .clear
-        return banner
-    }
-
-    func updateUIView(_ uiView: GADBannerView, context: Context) {
-        if uiView.rootViewController == nil {
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let rootVC = windowScene.windows.first?.rootViewController {
-                uiView.rootViewController = rootVC
-                let request = GADRequest()
-                uiView.load(request)
+    var body: some View {
+        if !store.isPro {
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.03))
+                    .frame(height: 50)
+                    .overlay(
+                        HStack(spacing: 8) {
+                            Image(systemName: "megaphone.fill")
+                                .font(.caption)
+                                .foregroundColor(.gray.opacity(0.5))
+                            Text("Ad Space")
+                                .font(.caption2)
+                                .foregroundColor(.gray.opacity(0.5))
+                            Spacer()
+                            Text("Upgrade to Pro to remove")
+                                .font(.system(size: 9))
+                                .foregroundColor(.gray.opacity(0.3))
+                        }
+                        .padding(.horizontal, 12)
+                    )
             }
         }
     }
 }
 
-struct AdBannerContainer: View {
-    @ObservedObject private var store = StoreKitManager.shared
-
-    static let testAdUnitID = "ca-app-pub-3940256099942544/2435281174"
-
-    var body: some View {
-        if !store.isPro {
-            BannerAdView(adUnitID: Self.testAdUnitID)
-                .frame(height: 50)
-                .background(Color.black)
-        }
-    }
-}

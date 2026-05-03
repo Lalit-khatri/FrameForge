@@ -354,7 +354,7 @@ struct ExportView: View {
         }
     }
 
-    private func exportErrorView(error: Error) -> some View {
+    private func exportErrorView(error: String) -> some View {
         VStack(spacing: 24) {
             ZStack {
                 Circle()
@@ -369,7 +369,7 @@ struct ExportView: View {
                 .font(.title2.bold())
                 .foregroundColor(.white)
 
-            Text(error.localizedDescription)
+            Text(error)
                 .font(.subheadline)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
