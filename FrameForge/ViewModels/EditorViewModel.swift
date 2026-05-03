@@ -42,6 +42,7 @@ final class EditorViewModel {
     var showNoiseReduction = false
     var showBeatSync = false
     var showSplitScreen = false
+    var showMasking = false
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

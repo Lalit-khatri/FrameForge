@@ -87,6 +87,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showSplitScreen) {
             SplitScreenView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showMasking) {
+            MaskingView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -185,6 +188,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Effects", icon: "sparkles", color: .white) {
                     viewModel.showEffectsPanel = true
+                }
+                toolButton("Mask", icon: "rectangle.on.rectangle", color: .white) {
+                    viewModel.showMasking = true
                 }
                 toolButton("Transition", icon: "arrow.right.arrow.left", color: .white) {
                     viewModel.showTransitionsPanel = true
