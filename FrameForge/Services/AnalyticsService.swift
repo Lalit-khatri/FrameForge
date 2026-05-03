@@ -8,6 +8,13 @@ final class AnalyticsService {
     private var sessionStart = Date()
     private var eventCount = 0
 
+    private enum Keys {
+        static let totalEvents = "analytics_total_events"
+        static func eventCount(_ event: AnalyticsEvent) -> String {
+            "analytics_count_\(event.name)"
+        }
+    }
+
     private init() {
         sessionStart = Date()
         track(.appLaunched)
@@ -21,7 +28,7 @@ final class AnalyticsService {
 
         logger.info("📊 [\(event.name)] \(params.description)")
 
-        UserDefaults.standard.set(eventCount, forKey: "analytics_total_events")
+        UserDefaults.standard.set(eventCount, forKey: Keys.totalEvents)
         incrementCounter(for: event)
     }
 
@@ -40,13 +47,13 @@ final class AnalyticsService {
     }
 
     private func incrementCounter(for event: AnalyticsEvent) {
-        let key = "analytics_count_\(event.name)"
+        let key = Keys.eventCount(event)
         let count = UserDefaults.standard.integer(forKey: key)
         UserDefaults.standard.set(count + 1, forKey: key)
     }
 
     func eventCount(for event: AnalyticsEvent) -> Int {
-        UserDefaults.standard.integer(forKey: "analytics_count_\(event.name)")
+        UserDefaults.standard.integer(forKey: Keys.eventCount(event))
     }
 
     var sessionDuration: TimeInterval {

@@ -45,6 +45,10 @@ struct FrameForgePlugin: Identifiable, Codable {
 final class PluginManager {
     var plugins: [FrameForgePlugin] = []
 
+    private enum Keys {
+        static let pluginStates = "pluginStates"
+    }
+
     init() { loadBuiltInPlugins() }
 
     private func loadBuiltInPlugins() {
@@ -79,12 +83,12 @@ final class PluginManager {
 
     private func saveUserPlugins() {
         if let data = try? JSONEncoder().encode(plugins.map(\.isEnabled)) {
-            UserDefaults.standard.set(data, forKey: "pluginStates")
+            UserDefaults.standard.set(data, forKey: Keys.pluginStates)
         }
     }
 
     private func loadUserPlugins() {
-        if let data = UserDefaults.standard.data(forKey: "pluginStates"),
+        if let data = UserDefaults.standard.data(forKey: Keys.pluginStates),
            let states = try? JSONDecoder().decode([Bool].self, from: data),
            states.count == plugins.count {
             for i in 0..<plugins.count {

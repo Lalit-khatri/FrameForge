@@ -9,6 +9,10 @@ struct LUTImportView: View {
     @State private var importError: String?
     @State private var selectedLUTID: UUID?
 
+    private enum Keys {
+        static let importedLUTs = "importedLUTs"
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -166,12 +170,12 @@ struct LUTImportView: View {
     private func saveLUTs() {
         let encoder = JSONEncoder()
         if let data = try? encoder.encode(importedLUTs) {
-            UserDefaults.standard.set(data, forKey: "importedLUTs")
+            UserDefaults.standard.set(data, forKey: Keys.importedLUTs)
         }
     }
 
     private func loadSavedLUTs() {
-        if let data = UserDefaults.standard.data(forKey: "importedLUTs"),
+        if let data = UserDefaults.standard.data(forKey: Keys.importedLUTs),
            let luts = try? JSONDecoder().decode([LUTData].self, from: data) {
             importedLUTs = luts
         }

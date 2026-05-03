@@ -10,6 +10,12 @@ final class StoreKitManager: ObservableObject {
     static let tipMediumID = "com.frameforge.tip.medium"
     static let tipLargeID = "com.frameforge.tip.large"
 
+    private enum Keys {
+        static let isPro = "isPro"
+        static let hasTipped = "hasTipped"
+        static let tipKeyword = "tip"
+    }
+
     private static let allProductIDs: Set<String> = [
         proID, tipSmallID, tipMediumID, tipLargeID
     ]
@@ -24,8 +30,8 @@ final class StoreKitManager: ObservableObject {
     private typealias Transaction = StoreKit.Transaction
 
     private init() {
-        isPro = UserDefaults.standard.bool(forKey: "isPro")
-        hasTipped = UserDefaults.standard.bool(forKey: "hasTipped")
+        isPro = UserDefaults.standard.bool(forKey: Keys.isPro)
+        hasTipped = UserDefaults.standard.bool(forKey: Keys.hasTipped)
     }
 
     func start() {
@@ -75,7 +81,7 @@ final class StoreKitManager: ObservableObject {
     }
 
     var tipProducts: [Product] {
-        products.filter { $0.id.contains("tip") }.sorted { $0.price < $1.price }
+        products.filter { $0.id.contains(Keys.tipKeyword) }.sorted { $0.price < $1.price }
     }
 
     private func listenForTransactions() -> Task<Void, Never> {
@@ -101,10 +107,10 @@ final class StoreKitManager: ObservableObject {
     private func handleTransaction(_ transaction: Transaction) async {
         if transaction.productID == Self.proID {
             isPro = true
-            UserDefaults.standard.set(true, forKey: "isPro")
-        } else if transaction.productID.contains("tip") {
+            UserDefaults.standard.set(true, forKey: Keys.isPro)
+        } else if transaction.productID.contains(Keys.tipKeyword) {
             hasTipped = true
-            UserDefaults.standard.set(true, forKey: "hasTipped")
+            UserDefaults.standard.set(true, forKey: Keys.hasTipped)
         }
     }
 }
