@@ -72,6 +72,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showPhotoImport) {
             PhotoImportView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showPiP) {
+            PictureInPictureView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -167,6 +170,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Transition", icon: "arrow.right.arrow.left", color: .white) {
                     viewModel.showTransitionsPanel = true
+                }
+                toolButton("PiP", icon: "pip", color: .white) {
+                    viewModel.showPiP = true
                 }
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()

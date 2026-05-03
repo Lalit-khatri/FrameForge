@@ -66,6 +66,8 @@ struct TimelineClip: Identifiable, Codable {
     var isMuted: Bool
     var keyframeAnimation: KeyframeAnimation?
     var motionTrack: MotionTrackData?
+    var pipPosition: String?
+    var pipScale: Float?
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)
