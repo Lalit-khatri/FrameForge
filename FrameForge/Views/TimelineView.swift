@@ -408,6 +408,22 @@ struct TimelineView: View {
                 .padding(.vertical, 3)
             }
 
+            if track.type == .audio {
+                HStack(spacing: 1) {
+                    let barCount = max(4, Int(clipWidth / 3))
+                    ForEach(0..<barCount, id: \.self) { i in
+                        let seed = abs(sin(Double(i) * 1.618 + Double(clip.id.hashValue))) 
+                        let h = CGFloat(6 + seed * Double(trackHeight - 18))
+                        RoundedRectangle(cornerRadius: 0.5)
+                            .fill(Color(red: 0.13, green: 0.59, blue: 0.95).opacity(0.5))
+                            .frame(width: 2, height: h)
+                    }
+                }
+                .padding(.horizontal, handleWidth + 2)
+                .padding(.vertical, 4)
+                .frame(height: trackHeight, alignment: .center)
+            }
+
             VStack(alignment: .leading, spacing: 1) {
                 if let textOverlay = clip.textOverlay {
                     Text(textOverlay.text)
