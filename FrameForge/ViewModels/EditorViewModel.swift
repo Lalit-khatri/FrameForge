@@ -913,6 +913,29 @@ final class EditorViewModel {
             newStart = max(newStart, prevEnd)
         }
 
+        let snapThreshold: Double = 0.1
+        var snapTargets: [Double] = [0, currentTime]
+
+        for (ti, track) in tracks.enumerated() {
+            for clip in track.clips where clip.id != clipID {
+                snapTargets.append(clip.startTime)
+                snapTargets.append(clip.endTime)
+            }
+        }
+
+        for target in snapTargets {
+            if abs(newStart - target) < snapThreshold {
+                newStart = target
+                break
+            }
+            let newEnd = newStart + clipDuration
+            if abs(newEnd - target) < snapThreshold {
+                newStart = target - clipDuration
+                break
+            }
+        }
+
+        newStart = max(0, newStart)
         tracks[trackIdx].clips[clipIdx].startTime = newStart
 
         for i in (clipIdx + 1)..<tracks[trackIdx].clips.count {
