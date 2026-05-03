@@ -17,10 +17,12 @@ struct AdaptiveEditorLayout: View {
     private var iPadLayout: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                VideoPreviewView(viewModel: viewModel)
+                Color(white: 0.12)
                     .frame(maxHeight: .infinity)
-                PlaybackControlsView(viewModel: viewModel)
-                    .frame(height: 50)
+                    .overlay(
+                        Text("Preview")
+                            .foregroundColor(.gray)
+                    )
             }
             .frame(maxWidth: .infinity)
 
@@ -30,7 +32,7 @@ struct AdaptiveEditorLayout: View {
             VStack(spacing: 0) {
                 TimelineView(viewModel: viewModel)
                     .frame(maxHeight: .infinity)
-                ToolbarView(viewModel: viewModel)
+                ToolbarView(viewModel: viewModel, onAddMedia: { viewModel.showMediaPicker = true })
                     .frame(height: 80)
             }
             .frame(width: 420)
@@ -39,13 +41,15 @@ struct AdaptiveEditorLayout: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: 0) {
-            VideoPreviewView(viewModel: viewModel)
+            Color(white: 0.12)
                 .frame(maxHeight: .infinity)
-            PlaybackControlsView(viewModel: viewModel)
-                .frame(height: 44)
+                .overlay(
+                    Text("Preview")
+                        .foregroundColor(.gray)
+                )
             TimelineView(viewModel: viewModel)
                 .frame(height: 200)
-            ToolbarView(viewModel: viewModel)
+            ToolbarView(viewModel: viewModel, onAddMedia: { viewModel.showMediaPicker = true })
                 .frame(height: 80)
         }
     }

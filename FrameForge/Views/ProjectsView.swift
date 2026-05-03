@@ -11,6 +11,7 @@ struct ProjectsView: View {
     @State private var showAbout = false
     @State private var showProjectLimitAlert = false
     @State private var showProUpgrade = false
+    @State private var projectToDelete: Project?
     @ObservedObject private var store = StoreKitManager.shared
 
     private var maxProjects: Int { store.isPro ? 10 : 5 }
@@ -193,7 +194,7 @@ struct ProjectsView: View {
         }
         .contextMenu {
             Button(role: .destructive) {
-                modelContext.delete(project)
+                projectToDelete = project
             } label: {
                 Label("Delete", systemImage: "trash")
             }

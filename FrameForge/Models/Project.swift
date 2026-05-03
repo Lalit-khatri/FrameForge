@@ -30,6 +30,27 @@ final class Project {
     }
 }
 
+extension Project: Encodable {
+    enum CodingKeys: String, CodingKey {
+        case id, name, createdAt, modifiedAt, thumbnailData
+        case aspectRatio, frameRate, resolution, trackData, stickerData
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(modifiedAt, forKey: .modifiedAt)
+        try container.encodeIfPresent(thumbnailData, forKey: .thumbnailData)
+        try container.encode(aspectRatio, forKey: .aspectRatio)
+        try container.encode(frameRate, forKey: .frameRate)
+        try container.encode(resolution, forKey: .resolution)
+        try container.encodeIfPresent(trackData, forKey: .trackData)
+        try container.encodeIfPresent(stickerData, forKey: .stickerData)
+    }
+}
+
 enum AspectRatio: String, Codable, CaseIterable {
     case portrait9x16 = "9:16"
     case landscape16x9 = "16:9"

@@ -21,6 +21,8 @@ final class StoreKitManager: ObservableObject {
 
     private var transactionListener: Task<Void, Never>?
 
+    private typealias Transaction = StoreKit.Transaction
+
     private init() {
         isPro = UserDefaults.standard.bool(forKey: "isPro")
         hasTipped = UserDefaults.standard.bool(forKey: "hasTipped")

@@ -120,7 +120,7 @@ struct VideoStabilizationView: View {
         isProcessing = true
         viewModel.saveState()
         viewModel.tracks[ti].clips[ci].effects.append(
-            ClipEffect(type: "stabilize", intensity: Float(smoothness))
+            ClipEffect(type: .stabilize, intensity: Float(smoothness))
         )
         Task {
             try? await Task.sleep(nanoseconds: 500_000_000)

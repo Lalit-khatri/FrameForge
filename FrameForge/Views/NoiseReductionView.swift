@@ -109,7 +109,7 @@ struct NoiseReductionView: View {
         isProcessing = true
         viewModel.saveState()
         viewModel.tracks[ti].clips[ci].effects.append(
-            ClipEffect(type: "noiseReduction", intensity: Float(reductionAmount))
+            ClipEffect(type: .noiseReduction, intensity: Float(reductionAmount))
         )
         Task {
             try? await Task.sleep(nanoseconds: 500_000_000)

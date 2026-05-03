@@ -148,13 +148,17 @@ struct ProUpgradeView: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(
-                store.isPro
-                ? Color.green
-                : LinearGradient(
-                    colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
-                             Color(red: 0.99, green: 0.32, blue: 0.56)],
-                    startPoint: .leading, endPoint: .trailing
-                )
+                Group {
+                    if store.isPro {
+                        Color.green
+                    } else {
+                        LinearGradient(
+                            colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
+                                     Color(red: 0.99, green: 0.32, blue: 0.56)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    }
+                }
             )
             .foregroundColor(.white)
             .cornerRadius(16)

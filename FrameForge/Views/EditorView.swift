@@ -536,25 +536,7 @@ extension EditorView {
         }
     }
 
-    private var gridOverlay: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            Path { path in
-                for i in 1..<3 {
-                    let x = w * CGFloat(i) / 3.0
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: h))
 
-                    let y = h * CGFloat(i) / 3.0
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: w, y: y))
-                }
-            }
-            .stroke(Color.white.opacity(0.3), lineWidth: 0.5)
-        }
-        .allowsHitTesting(false)
-    }
 
     @ViewBuilder
     private var videoTrackOverlayLayer: some View {

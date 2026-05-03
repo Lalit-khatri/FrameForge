@@ -686,6 +686,21 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
                     kCIInputBackgroundImageKey: background,
                     kCIInputMaskImageKey: scaledMask
                 ]).cropped(to: extent)
+
+            case .stabilize:
+                break
+
+            case .noiseReduction:
+                result = result.applyingFilter("CINoiseReduction", parameters: [
+                    "inputNoiseLevel": intensity * 0.05,
+                    "inputSharpness": 0.4
+                ])
+
+            case .mask:
+                let radius = intensity * 20.0
+                result = result.applyingFilter("CIGaussianBlur", parameters: [
+                    kCIInputRadiusKey: radius
+                ]).cropped(to: extent)
             }
         }
 

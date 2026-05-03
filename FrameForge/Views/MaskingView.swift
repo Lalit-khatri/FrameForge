@@ -125,9 +125,11 @@ struct MaskingView: View {
         guard let clipID = viewModel.selectedClipID,
               let (ti, ci) = viewModel.findClipIndices(clipID) else { return }
         viewModel.saveState()
-        viewModel.tracks[ti].clips[ci].effects.append(
-            ClipEffect(type: "mask_\(maskShape.rawValue)_\(maskEffect.rawValue)", intensity: Float(feather / 50))
-        )
+        var effect = ClipEffect(type: .mask, intensity: Float(feather / 50))
+        effect.parameters["shape"] = Double(MaskShape.allCases.firstIndex(of: maskShape) ?? 0)
+        effect.parameters["effect"] = Double(MaskEffect.allCases.firstIndex(of: maskEffect) ?? 0)
+        effect.parameters["inverted"] = invertMask ? 1.0 : 0.0
+        viewModel.tracks[ti].clips[ci].effects.append(effect)
         Task { await viewModel.rebuildComposition() }
         HapticManager.shared.success()
     }

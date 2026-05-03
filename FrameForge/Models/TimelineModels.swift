@@ -123,6 +123,28 @@ struct TextOverlayData: Codable {
         self.scale = 1.0
         self.animationStyle = .none
     }
+
+    init(
+        text: String,
+        fontName: String,
+        fontSize: CGFloat,
+        textColor: CodableColor,
+        backgroundColor: CodableColor?,
+        position: CGPoint,
+        rotation: Double,
+        scale: CGFloat,
+        animationType: String
+    ) {
+        self.text = text
+        self.fontName = fontName
+        self.fontSize = fontSize
+        self.textColor = textColor
+        self.backgroundColor = backgroundColor
+        self.position = position
+        self.rotation = rotation
+        self.scale = scale
+        self.animationStyle = TextAnimation(rawValue: animationType.capitalized) ?? .none
+    }
 }
 
 struct CodableColor: Codable {
@@ -182,6 +204,9 @@ enum EffectType: String, Codable, CaseIterable {
     case denoise = "Denoise"
     case mosaic = "Mosaic"
     case backgroundRemoval = "BG Remove"
+    case stabilize = "Stabilize"
+    case noiseReduction = "Noise Reduction"
+    case mask = "Mask"
 
     var hasIntensitySlider: Bool {
         switch self {
@@ -206,6 +231,9 @@ enum EffectType: String, Codable, CaseIterable {
         case .sharpen: return 0.5
         case .border: return 0.3
         case .rotate: return 0.25
+        case .stabilize: return 0.5
+        case .noiseReduction: return 0.5
+        case .mask: return 0.5
         default: return 1.0
         }
     }
