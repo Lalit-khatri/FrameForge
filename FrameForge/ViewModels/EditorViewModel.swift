@@ -26,6 +26,9 @@ final class EditorViewModel {
     var showBackgroundRemoval = false
     var showKeyframeEditor = false
     var showMotionTracking = false
+    var showLUTImport = false
+    var show3DText = false
+    var currentLUT: LUTData?
     var stickers: [StickerData] = []
     var zoomScale: CGFloat = 2.5
     var exportSettings = ExportSettings()

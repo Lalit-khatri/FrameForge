@@ -45,6 +45,12 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showMotionTracking) {
             MotionTrackingView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showLUTImport) {
+            LUTImportView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.show3DText) {
+            Text3DView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -76,6 +82,12 @@ struct ToolbarView: View {
                 }
                 toolButton("Track", icon: "scope", color: .white) {
                     viewModel.showMotionTracking = true
+                }
+                toolButton("3D Text", icon: "cube", color: .white) {
+                    viewModel.show3DText = true
+                }
+                toolButton("LUT", icon: "paintpalette", color: .white) {
+                    viewModel.showLUTImport = true
                 }
                 toolButton("Sticker", icon: "face.smiling", color: .white) {
                     viewModel.showStickerPicker = true
