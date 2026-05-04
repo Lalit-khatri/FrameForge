@@ -3,6 +3,7 @@ import SwiftData
 
 struct ProjectsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.requestReview) private var requestReview
     @Query(sort: \Project.modifiedAt, order: .reverse) private var projects: [Project]
     @State private var showNewProject = false
     @State private var newProjectName = ""
@@ -102,7 +103,7 @@ struct ProjectsView: View {
                 Button(action: { showAbout = true }) {
                     Label("About FrameForge", systemImage: "info.circle")
                 }
-                Button(action: {}) {
+                Button(action: { requestReview() }) {
                     Label("Rate App", systemImage: "star")
                 }
             } label: {
@@ -269,6 +270,7 @@ struct ProjectsView: View {
                         .cornerRadius(12)
                         .foregroundColor(.white)
                         .font(.body)
+                        .submitLabel(.done)
                 }
                 .padding(.horizontal, 20)
 
