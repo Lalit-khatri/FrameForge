@@ -13,16 +13,20 @@ struct EditorView: View {
 
     var body: some View {
         GeometryReader { geo in
-            VStack(spacing: 0) {
-                editorTopBar
-                    .zIndex(10)
-                previewSection(geo: geo)
-                playbackControls
-                TimelineView(viewModel: viewModel)
-                    .frame(maxHeight: .infinity)
-                toolbarSection
-                AdBannerContainer()
-                    .padding(.bottom, geo.safeAreaInsets.bottom)
+            ZStack {
+                VStack(spacing: 0) {
+                    editorTopBar
+                        .zIndex(10)
+                    previewSection(geo: geo)
+                    playbackControls
+                    TimelineView(viewModel: viewModel)
+                        .frame(maxHeight: .infinity)
+                    toolbarSection
+                    AdBannerContainer()
+                        .padding(.bottom, geo.safeAreaInsets.bottom)
+                }
+
+                ToastOverlay(message: $viewModel.toastMessage)
             }
             .background(Color.black)
             .ignoresSafeArea(.container, edges: .bottom)

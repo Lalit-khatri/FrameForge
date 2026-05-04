@@ -66,6 +66,7 @@ final class EditorViewModel {
     var showAudioBrowser = false
     var showFullscreenPreview = false
     var hasUnsavedChanges = false
+    var toastMessage: ToastMessage?
 
     var adjustBrightness: Float = 0
     var adjustContrast: Float = 0
@@ -191,6 +192,12 @@ final class EditorViewModel {
             project.thumbnailData = thumbData
         }
         hasUnsavedChanges = false
+    }
+
+    func showToast(icon: String, text: String) {
+        withAnimation(.spring(response: 0.3)) {
+            toastMessage = ToastMessage(icon: icon, text: text)
+        }
     }
 
     private func startAutoSaveIfNeeded() {
@@ -431,6 +438,7 @@ final class EditorViewModel {
         Task { await rebuildComposition() }
         saveProject()
         HapticManager.shared.medium()
+        showToast(icon: "trash", text: "Clip deleted")
     }
 
     func splitClipAtPlayhead() {
@@ -516,6 +524,7 @@ final class EditorViewModel {
             Task { await rebuildComposition() }
             saveProject()
             HapticManager.shared.success()
+            showToast(icon: "plus.square.on.square", text: "Clip duplicated")
             return
         }
     }
@@ -587,6 +596,7 @@ final class EditorViewModel {
         }
         Task { await rebuildComposition() }
         HapticManager.shared.selection()
+        showToast(icon: "camera.filters", text: "Filter applied")
     }
 
     func applyAdjustments(toClip clipID: UUID) {
@@ -700,6 +710,7 @@ final class EditorViewModel {
                 tracks[i].clips[j].isReversed.toggle()
                 Task { await rebuildComposition() }
                 HapticManager.shared.medium()
+                showToast(icon: "arrow.uturn.left", text: tracks[i].clips[j].isReversed ? "Clip reversed" : "Reverse removed")
                 return
             }
         }
@@ -836,6 +847,7 @@ final class EditorViewModel {
             tracks[trackIdx].clips.append(freezeClip)
             recalculateStartTimes()
             Task { await rebuildComposition() }
+            showToast(icon: "pause.rectangle", text: "Freeze frame added")
         }
     }
 
