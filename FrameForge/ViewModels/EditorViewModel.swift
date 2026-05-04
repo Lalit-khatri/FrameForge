@@ -65,6 +65,7 @@ final class EditorViewModel {
     var masterVolume: Float = 1.0
     var showAudioBrowser = false
     var showFullscreenPreview = false
+    var hasUnsavedChanges = false
 
     var adjustBrightness: Float = 0
     var adjustContrast: Float = 0
@@ -189,6 +190,7 @@ final class EditorViewModel {
         if let firstClip = tracks.first?.clips.first, let thumbData = firstClip.thumbnailData {
             project.thumbnailData = thumbData
         }
+        hasUnsavedChanges = false
     }
 
     private func startAutoSaveIfNeeded() {
@@ -218,6 +220,7 @@ final class EditorViewModel {
             undoStack.removeFirst(undoStack.count - maxSteps)
         }
         redoStack.removeAll()
+        hasUnsavedChanges = true
     }
 
     func undo() {

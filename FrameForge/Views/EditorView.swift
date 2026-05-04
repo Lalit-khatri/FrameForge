@@ -9,6 +9,7 @@ struct EditorView: View {
     @State private var viewModel = EditorViewModel()
     @State private var pinchBaseScale: CGFloat?
     @State private var rotateBaseAngle: Double?
+    @State private var showDiscardAlert = false
 
     var body: some View {
         GeometryReader { geo in
@@ -48,6 +49,16 @@ struct EditorView: View {
         .onDisappear {
             viewModel.saveProject()
         }
+        .alert("Unsaved Changes", isPresented: $showDiscardAlert) {
+            Button("Save & Close") {
+                viewModel.saveProject()
+                onDismiss()
+            }
+            Button("Discard", role: .destructive) { onDismiss() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You have unsaved changes. Would you like to save before leaving?")
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
             viewModel.saveProject()
         }
@@ -55,7 +66,13 @@ struct EditorView: View {
 
     private var editorTopBar: some View {
         HStack(spacing: 8) {
-            Button(action: onDismiss) {
+            Button(action: {
+                if viewModel.hasUnsavedChanges {
+                    showDiscardAlert = true
+                } else {
+                    onDismiss()
+                }
+            }) {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
                     Text("Projects")
