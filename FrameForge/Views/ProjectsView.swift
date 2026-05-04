@@ -59,6 +59,23 @@ struct ProjectsView: View {
         .sheet(isPresented: $showProUpgrade) {
             ProUpgradeView()
         }
+        .alert("Delete Project?",
+               isPresented: Binding(
+                   get: { projectToDelete != nil },
+                   set: { if !$0 { projectToDelete = nil } }
+               )
+        ) {
+            Button("Delete", role: .destructive) {
+                if let project = projectToDelete {
+                    modelContext.delete(project)
+                    try? modelContext.save()
+                    projectToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { projectToDelete = nil }
+        } message: {
+            Text("This will permanently delete \"\(projectToDelete?.name ?? "")\" and all its clips. This cannot be undone.")
+        }
     }
 
     private var headerSection: some View {

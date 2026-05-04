@@ -3,6 +3,7 @@ import SwiftUI
 struct ToolbarView: View {
     @Bindable var viewModel: EditorViewModel
     var onAddMedia: () -> Void
+    @State private var showDeleteClipAlert = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,6 +16,14 @@ struct ToolbarView: View {
             }
         }
         .background(Color(white: 0.06))
+        .alert("Delete Clip?", isPresented: $showDeleteClipAlert) {
+            Button("Delete", role: .destructive) {
+                viewModel.deleteSelectedClip()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This clip will be removed from the timeline. This cannot be undone.")
+        }
         .sheet(isPresented: $viewModel.showFiltersPanel) {
             FiltersView(viewModel: viewModel)
         }
@@ -214,7 +223,7 @@ struct ToolbarView: View {
                     viewModel.addFreezeFrame()
                 }
                 toolButton("Delete", icon: "trash", color: .red) {
-                    viewModel.deleteSelectedClip()
+                    showDeleteClipAlert = true
                 }
                 toolButton("Deselect", icon: "xmark.circle", color: .gray) {
                     viewModel.selectedClipID = nil
