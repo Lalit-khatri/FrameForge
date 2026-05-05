@@ -25,175 +25,137 @@ struct OnboardingView: View {
     ]
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Color.black.ignoresSafeArea()
+        ZStack {
+            Color.black.ignoresSafeArea()
 
-                animatedBackground
-
-                if verticalSizeClass == .compact {
-                    landscapeLayout(geo: geo)
-                } else {
-                    portraitLayout(geo: geo)
-                }
+            if verticalSizeClass == .compact {
+                landscapeBody
+            } else {
+                portraitBody
             }
         }
-        .ignoresSafeArea()
     }
 
-    private func portraitLayout(geo: GeometryProxy) -> some View {
+    private var portraitBody: some View {
         VStack(spacing: 0) {
-            skipButton
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.top, geo.safeAreaInsets.top + 12)
-                .padding(.trailing, 24)
+            HStack {
+                Spacer()
+                if currentPage < pages.count - 1 {
+                    Button("Skip") {
+                        withAnimation { currentPage = pages.count - 1 }
+                        HapticManager.shared.light()
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(.gray)
+                }
+            }
+            .frame(height: 20)
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
 
-            Spacer(minLength: 20)
+            Spacer()
 
-            iconSection(page: pages[currentPage], iconSize: 70, glowSize: 160)
-                .frame(height: geo.size.height * 0.3)
+            iconView(size: 56, glowRadius: 50)
 
-            textSection(page: pages[currentPage])
-                .padding(.horizontal, 32)
+            Spacer().frame(height: 40)
 
-            Spacer(minLength: 20)
+            VStack(spacing: 12) {
+                Text(pages[currentPage].title)
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+
+                Text(pages[currentPage].subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+            .padding(.horizontal, 40)
+
+            Spacer()
 
             pageIndicator
-                .padding(.bottom, 24)
+                .padding(.bottom, 28)
 
             actionButton
                 .padding(.horizontal, 40)
-                .padding(.bottom, geo.safeAreaInsets.bottom + 20)
+                .padding(.bottom, 40)
         }
     }
 
-    private func landscapeLayout(geo: GeometryProxy) -> some View {
-        VStack(spacing: 0) {
-            skipButton
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.top, geo.safeAreaInsets.top + 8)
-                .padding(.trailing, 24)
-
-            HStack(spacing: 32) {
-                iconSection(page: pages[currentPage], iconSize: 50, glowSize: 110)
-                    .frame(width: geo.size.width * 0.3)
-
-                VStack(spacing: 16) {
-                    textSection(page: pages[currentPage], compact: true)
-                }
+    private var landscapeBody: some View {
+        HStack(spacing: 0) {
+            iconView(size: 44, glowRadius: 40)
                 .frame(maxWidth: .infinity)
-            }
-            .padding(.horizontal, 40)
 
-            Spacer(minLength: 8)
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    if currentPage < pages.count - 1 {
+                        Button("Skip") {
+                            withAnimation { currentPage = pages.count - 1 }
+                            HapticManager.shared.light()
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(.gray)
+                    }
+                }
+                .padding(.trailing, 24)
+                .padding(.top, 8)
 
-            HStack(spacing: 24) {
+                Spacer()
+
+                VStack(spacing: 8) {
+                    Text(pages[currentPage].title)
+                        .font(.title3.bold())
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+
+                    Text(pages[currentPage].subtitle)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
+
                 pageIndicator
+                    .padding(.bottom, 12)
 
                 actionButton
-                    .frame(maxWidth: 260)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 16)
             }
-            .padding(.horizontal, 40)
-            .padding(.bottom, geo.safeAreaInsets.bottom + 12)
+            .frame(maxWidth: .infinity)
         }
     }
 
-    private func iconSection(page: (icon: String, title: String, subtitle: String, gradient: [Color]), iconSize: CGFloat, glowSize: CGFloat) -> some View {
-        ZStack {
+    private func iconView(size: CGFloat, glowRadius: CGFloat) -> some View {
+        let page = pages[currentPage]
+        return ZStack {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: page.gradient + [.clear],
+                        colors: [page.gradient.first?.opacity(0.4) ?? .clear, .clear],
                         center: .center,
-                        startRadius: 0,
-                        endRadius: glowSize * 0.7
+                        startRadius: 5,
+                        endRadius: glowRadius
                     )
                 )
-                .frame(width: glowSize, height: glowSize)
-                .opacity(0.6)
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: page.gradient.map { $0.opacity(0.3) } + [.clear],
-                        center: .center,
-                        startRadius: glowSize * 0.3,
-                        endRadius: glowSize
-                    )
-                )
-                .frame(width: glowSize * 1.6, height: glowSize * 1.6)
+                .frame(width: glowRadius * 2, height: glowRadius * 2)
 
             Image(systemName: page.icon)
-                .font(.system(size: iconSize, weight: .light))
+                .font(.system(size: size, weight: .light))
                 .foregroundStyle(
                     LinearGradient(colors: page.gradient,
                                  startPoint: .topLeading, endPoint: .bottomTrailing)
                 )
-                .shadow(color: page.gradient.first?.opacity(0.5) ?? .clear, radius: 20)
+                .shadow(color: page.gradient.first?.opacity(0.5) ?? .clear, radius: 15)
         }
-        .animation(.easeInOut(duration: 0.5), value: currentPage)
-    }
-
-    private func textSection(page: (icon: String, title: String, subtitle: String, gradient: [Color]), compact: Bool = false) -> some View {
-        VStack(spacing: compact ? 8 : 14) {
-            Text(page.title)
-                .font(compact ? .title2.bold() : .title.bold())
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-
-            Text(page.subtitle)
-                .font(compact ? .subheadline : .body)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-                .lineSpacing(compact ? 2 : 4)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .animation(.easeInOut(duration: 0.3), value: currentPage)
-    }
-
-    private var animatedBackground: some View {
-        ZStack {
-            let page = pages[currentPage]
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [page.gradient.first?.opacity(0.15) ?? .clear, .clear],
-                        center: .topLeading,
-                        startRadius: 50,
-                        endRadius: 400
-                    )
-                )
-                .frame(width: 600, height: 600)
-                .offset(x: -150, y: -200)
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [page.gradient.last?.opacity(0.1) ?? .clear, .clear],
-                        center: .bottomTrailing,
-                        startRadius: 50,
-                        endRadius: 350
-                    )
-                )
-                .frame(width: 500, height: 500)
-                .offset(x: 150, y: 250)
-        }
-        .animation(.easeInOut(duration: 0.8), value: currentPage)
-        .ignoresSafeArea()
-    }
-
-    private var skipButton: some View {
-        Group {
-            if currentPage < pages.count - 1 {
-                Button("Skip") {
-                    withAnimation { currentPage = pages.count - 1 }
-                    HapticManager.shared.light()
-                }
-                .font(.subheadline.weight(.medium))
-                .foregroundColor(.gray)
-            }
-        }
-        .frame(height: 24)
+        .animation(.easeInOut(duration: 0.4), value: currentPage)
     }
 
     private var pageIndicator: some View {
@@ -215,9 +177,7 @@ struct OnboardingView: View {
                 withAnimation(.spring(response: 0.4)) { currentPage += 1 }
             } else {
                 hasCompletedOnboarding = true
-                withAnimation(.easeOut(duration: 0.2)) {
-                    isPresented = false
-                }
+                isPresented = false
             }
             HapticManager.shared.light()
         }) {
@@ -228,13 +188,12 @@ struct OnboardingView: View {
                 .padding(.vertical, 16)
                 .background(
                     LinearGradient(
-                        colors: pages[currentPage].gradient,
+                        colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
+                                 Color(red: 0.99, green: 0.32, blue: 0.56)],
                         startPoint: .leading, endPoint: .trailing
                     )
                 )
                 .cornerRadius(16)
-                .shadow(color: pages[currentPage].gradient.first?.opacity(0.4) ?? .clear, radius: 12, y: 6)
         }
-        .animation(.easeInOut(duration: 0.3), value: currentPage)
     }
 }
