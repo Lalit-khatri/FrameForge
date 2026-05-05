@@ -36,7 +36,10 @@ final class StoreKitManager: ObservableObject {
 
     func start() {
         transactionListener = listenForTransactions()
-        Task { await loadProducts() }
+        Task {
+            await loadProducts()
+            await restorePurchases()
+        }
     }
 
     func loadProducts() async {
