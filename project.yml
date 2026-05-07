@@ -22,5 +22,7 @@ targets:
         NSSpeechRecognitionUsageDescription: FrameForge uses speech recognition to auto-generate captions from your video audio.
     entitlements:
       path: FrameForge/FrameForge.entitlements
+    settings:
+      CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
     dependencies:
       - package: GoogleMobileAds
