@@ -23,19 +23,24 @@ struct ProjectsView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    headerSection
-                    newProjectButton
-                    if !projects.isEmpty {
-                        projectsGrid
-                    } else {
-                        emptyState
+            VStack(spacing: 0) {
+                headerSection
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 16)
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        newProjectButton
+                        if !projects.isEmpty {
+                            projectsGrid
+                        } else {
+                            emptyState
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 40)
             }
         }
         .sheet(isPresented: $showNewProject) {

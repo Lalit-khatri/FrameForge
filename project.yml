@@ -20,6 +20,10 @@ targets:
         NSPhotoLibraryAddUsageDescription: FrameForge needs permission to save exported videos to your photo library.
         NSMicrophoneUsageDescription: FrameForge needs microphone access to record voiceovers for your projects.
         NSSpeechRecognitionUsageDescription: FrameForge uses speech recognition to auto-generate captions from your video audio.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     entitlements:
       path: FrameForge/FrameForge.entitlements
     settings:
