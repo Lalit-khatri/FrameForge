@@ -4,6 +4,7 @@ struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @Environment(\.verticalSizeClass) var verticalSizeClass
 
     private let pages: [(icon: String, title: String, subtitle: String, gradient: [Color])] = [
         ("film.stack", "Welcome to\nFrameForge",
@@ -38,58 +39,104 @@ struct OnboardingView: View {
                 .animation(.easeInOut(duration: 0.3), value: currentPage)
 
                 pageIndicator
-                    .padding(.bottom, 24)
+                    .padding(.bottom, verticalSizeClass == .compact ? 12 : 24)
 
                 actionButton
                     .padding(.horizontal, 40)
-                    .padding(.bottom, 50)
+                    .padding(.bottom, verticalSizeClass == .compact ? 20 : 50)
             }
         }
     }
 
+    @ViewBuilder
     private func pageContent(_ page: (icon: String, title: String, subtitle: String, gradient: [Color])) -> some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [page.gradient.first?.opacity(0.35) ?? .clear, .clear],
-                            center: .center,
-                            startRadius: 5,
-                            endRadius: 60
+        if verticalSizeClass == .compact {
+            // Landscape layout
+            HStack(spacing: 24) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [page.gradient.first?.opacity(0.35) ?? .clear, .clear],
+                                center: .center,
+                                startRadius: 5,
+                                endRadius: 60
+                            )
                         )
-                    )
-                    .frame(width: 120, height: 120)
+                        .frame(width: 120, height: 120)
 
-                Image(systemName: page.icon)
-                    .font(.system(size: 52, weight: .light))
-                    .foregroundStyle(
-                        LinearGradient(colors: page.gradient,
-                                     startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-            }
+                    Image(systemName: page.icon)
+                        .font(.system(size: 52, weight: .light))
+                        .foregroundStyle(
+                            LinearGradient(colors: page.gradient,
+                                         startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                }
+                .frame(maxWidth: .infinity)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(page.title)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            VStack(spacing: 12) {
-                Text(page.title)
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(page.subtitle)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 16)
+                    Text(page.subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.leading)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, 40)
             }
             .padding(.horizontal, 24)
+        } else {
+            // Portrait layout
+            VStack(spacing: 24) {
+                Spacer()
 
-            Spacer()
-            Spacer()
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [page.gradient.first?.opacity(0.35) ?? .clear, .clear],
+                                center: .center,
+                                startRadius: 5,
+                                endRadius: 60
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: page.icon)
+                        .font(.system(size: 52, weight: .light))
+                        .foregroundStyle(
+                            LinearGradient(colors: page.gradient,
+                                         startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                }
+
+                VStack(spacing: 12) {
+                    Text(page.title)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(page.subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
+                Spacer()
+            }
         }
     }
 
@@ -120,7 +167,7 @@ struct OnboardingView: View {
                 .font(.headline)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, verticalSizeClass == .compact ? 12 : 16)
                 .background(
                     LinearGradient(
                         colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
