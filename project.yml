@@ -26,3 +26,13 @@ targets:
       CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
     dependencies:
       - package: GoogleMobileAds
+
+  FrameForgeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [FrameForgeUITests]
+    dependencies:
+      - target: FrameForge
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.lalitkhatri.FrameForgeUITests
+      TEST_TARGET_NAME: FrameForge
