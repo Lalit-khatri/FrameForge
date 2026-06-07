@@ -5,9 +5,9 @@ import GoogleMobileAds
 
 @main
 struct FrameForgeApp: App {
-    @StateObject private var storeKit = StoreKitManager.shared
 
     init() {
+        // Configure audio session for video playback
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .moviePlayback, options: [])
@@ -23,8 +23,8 @@ struct FrameForgeApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
-                .environmentObject(storeKit)
         }
         .modelContainer(for: [Project.self])
     }
 }
+

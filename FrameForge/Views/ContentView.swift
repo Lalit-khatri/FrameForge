@@ -2,31 +2,21 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @State private var selectedProject: Project?
-    @State private var showEditor = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
+    @State private var navigationPath = NavigationPath()
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-
-            if let project = selectedProject, showEditor {
+        NavigationStack(path: $navigationPath) {
+            ProjectsView { project in
+                navigationPath.append(project)
+            }
+            .navigationDestination(for: Project.self) { project in
                 EditorView(project: project) {
-                    withAnimation(.spring(response: 0.3)) {
-                        showEditor = false
-                        selectedProject = nil
-                    }
+                    navigationPath.removeLast()
                 }
-                .transition(.move(edge: .trailing))
-            } else {
-                ProjectsView { project in
-                    selectedProject = project
-                    withAnimation(.spring(response: 0.3)) {
-                        showEditor = true
-                    }
-                }
-                .transition(.move(edge: .leading))
+                .navigationBarBackButtonHidden(true)
+                .toolbarBackground(.hidden, for: .navigationBar)
             }
         }
         .fullScreenCover(isPresented: $showOnboarding) {
