@@ -5,9 +5,6 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.verticalSizeClass) var verticalSizeClass
-    
-    // Auto-advance for testing
-    @State private var timer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
 
     private let pages: [(icon: String, title: String, subtitle: String, gradient: [Color])] = [
         ("film.stack", "Welcome to\nFrameForge",
@@ -47,15 +44,6 @@ struct OnboardingView: View {
                 actionButton
                     .padding(.horizontal, 40)
                     .padding(.bottom, verticalSizeClass == .compact ? 20 : 50)
-            }
-        }
-        .onReceive(timer) { _ in
-            if currentPage < pages.count - 1 {
-                withAnimation(.spring(response: 0.4)) { currentPage += 1 }
-            } else {
-                hasCompletedOnboarding = true
-                isPresented = false
-                timer.upstream.connect().cancel()
             }
         }
     }
@@ -172,7 +160,6 @@ struct OnboardingView: View {
             } else {
                 hasCompletedOnboarding = true
                 isPresented = false
-                timer.upstream.connect().cancel()
             }
             HapticManager.shared.light()
         }) {
