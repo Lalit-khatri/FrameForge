@@ -15,6 +15,7 @@ targets:
     info:
       path: FrameForge/Info.plist
       properties:
+        UILaunchScreen: {}
         GADApplicationIdentifier: ca-app-pub-8035596577604363~8815402433
         NSPhotoLibraryUsageDescription: FrameForge needs access to your photo library to import videos and images for editing.
         NSPhotoLibraryAddUsageDescription: FrameForge needs permission to save exported videos to your photo library.
