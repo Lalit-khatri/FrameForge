@@ -5,6 +5,7 @@ struct ExportView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var settings = ExportSettings()
     @State private var showCancelConfirm = false
+    @ObservedObject private var store = StoreKitManager.shared
 
     var body: some View {
         NavigationStack {
@@ -305,6 +306,12 @@ struct ExportView: View {
                     .font(.subheadline)
                     .foregroundColor(.red)
             }
+
+            // Show ad banner for free users during export wait
+            if !store.isPro {
+                AdBannerContainer()
+                    .padding(.top, 12)
+            }
         }
     }
 
@@ -355,6 +362,12 @@ struct ExportView: View {
                 }
             }
             .padding(.horizontal, 40)
+
+            // Show native ad card for free users after successful export
+            if !store.isPro {
+                NativeAdCardView()
+                    .padding(.top, 8)
+            }
         }
     }
 
