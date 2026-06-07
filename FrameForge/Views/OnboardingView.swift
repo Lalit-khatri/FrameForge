@@ -72,7 +72,6 @@ struct OnboardingView: View {
                                          startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                 }
-                .frame(maxWidth: .infinity)
                 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(page.title)
@@ -91,12 +90,8 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 40)
             }
-            .padding(.horizontal, 24)
         } else {
-            // Portrait layout
-            VStack(spacing: 24) {
-                Spacer()
-
+            VStack(spacing: 0) {
                 ZStack {
                     Circle()
                         .fill(
@@ -113,29 +108,27 @@ struct OnboardingView: View {
                         .font(.system(size: 52, weight: .light))
                         .foregroundStyle(
                             LinearGradient(colors: page.gradient,
-                                         startPoint: .topLeading, endPoint: .bottomTrailing)
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                 }
-
-                VStack(spacing: 12) {
-                    Text(page.title)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(page.subtitle)
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 16)
-                }
-                .padding(.horizontal, 24)
-
-                Spacer()
-                Spacer()
+               VStack(spacing: 12) {
+                        Text(page.title)
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                        
+                        Text(page.subtitle)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 16)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 36)
+                
             }
         }
     }
