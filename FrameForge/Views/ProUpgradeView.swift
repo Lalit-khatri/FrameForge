@@ -5,6 +5,8 @@ struct ProUpgradeView: View {
     @ObservedObject private var store = StoreKitManager.shared
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showRestoreResult = false
+    @State private var restoreResultMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -35,6 +37,11 @@ struct ProUpgradeView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(errorMessage)
+            }
+            .alert("Restore Purchases", isPresented: $showRestoreResult) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(restoreResultMessage)
             }
         }
     }
@@ -121,7 +128,11 @@ struct ProUpgradeView: View {
     private var purchaseButton: some View {
         Button(action: {
             Task {
-                guard let product = store.proProduct else { return }
+                guard let product = store.proProduct else {
+                    errorMessage = "Product unavailable. Please try again shortly."
+                    showError = true
+                    return
+                }
                 do {
                     let _ = try await store.purchase(product)
                 } catch {
@@ -137,8 +148,14 @@ struct ProUpgradeView: View {
                 } else if store.purchaseInProgress {
                     ProgressView()
                         .tint(.white)
+                } else if store.proProduct == nil {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white).scaleEffect(0.8)
+                        Text("Loading price...")
+                    }
+                    .font(.headline)
                 } else {
-                    Text("Upgrade for \(store.proProduct?.displayPrice ?? "$14.99")")
+                    Text("Upgrade for \(store.proProduct!.displayPrice)")
                         .font(.headline)
                     Text("One-time purchase")
                         .font(.caption)
@@ -163,16 +180,35 @@ struct ProUpgradeView: View {
             .foregroundColor(.white)
             .cornerRadius(16)
         }
-        .disabled(store.isPro || store.purchaseInProgress)
+        .disabled(store.isPro || store.purchaseInProgress || store.proProduct == nil)
     }
 
     private var restoreButton: some View {
-        Button(action: {
-            Task { await store.restorePurchases() }
-        }) {
-            Text("Restore Purchases")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+        VStack(spacing: 16) {
+            Button(action: {
+                Task {
+                    await store.restorePurchases()
+                    if store.isPro {
+                        restoreResultMessage = "Your Pro purchase has been restored!"
+                    } else {
+                        restoreResultMessage = "No previous purchase found for this Apple ID."
+                    }
+                    showRestoreResult = true
+                }
+            }) {
+                Text("Restore Purchases")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+
+            // Required by App Store Guidelines (3.1.1) for IAP screens
+            HStack(spacing: 12) {
+                Link("Privacy Policy", destination: URL(string: "https://github.com/Lalit-khatri/FrameForge/blob/main/PRIVACY.md")!)
+                Text("•").foregroundColor(.gray.opacity(0.5))
+                Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            }
+            .font(.caption2)
+            .foregroundColor(.gray.opacity(0.7))
         }
     }
 }

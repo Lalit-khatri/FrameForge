@@ -4,7 +4,7 @@ struct ExportView: View {
     @Bindable var viewModel: EditorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var settings = ExportSettings()
-    @State private var showProUpgrade = false
+    @State private var showCancelConfirm = false
     @ObservedObject private var store = StoreKitManager.shared
 
     var body: some View {
@@ -26,13 +26,24 @@ struct ExportView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(viewModel.isExporting ? "Stop" : "Cancel") {
                         if viewModel.isExporting {
-                            viewModel.cancelExport()
+                            showCancelConfirm = true
+                        } else {
+                            dismiss()
                         }
-                        dismiss()
                     }
+                    .foregroundColor(viewModel.isExporting ? .red : .primary)
                 }
+            }
+            .alert("Cancel Export?", isPresented: $showCancelConfirm) {
+                Button("Keep Exporting", role: .cancel) {}
+                Button("Cancel Export", role: .destructive) {
+                    viewModel.cancelExport()
+                    dismiss()
+                }
+            } message: {
+                Text("Your export progress will be lost.")
             }
         }
         .presentationDetents([.medium, .large])
@@ -290,14 +301,17 @@ struct ExportView: View {
                 .font(.caption)
                 .foregroundColor(.gray)
 
-            Button(action: { viewModel.cancelExport() }) {
+            Button(action: { showCancelConfirm = true }) {
                 Text("Cancel Export")
                     .font(.subheadline)
                     .foregroundColor(.red)
             }
 
-            AdBannerContainer()
-                .padding(.top, 12)
+            // Show ad banner for free users during export wait
+            if !store.isPro {
+                AdBannerContainer()
+                    .padding(.top, 12)
+            }
         }
     }
 
@@ -349,8 +363,11 @@ struct ExportView: View {
             }
             .padding(.horizontal, 40)
 
-            NativeAdCardView()
-                .padding(.top, 8)
+            // Show native ad card for free users after successful export
+            if !store.isPro {
+                NativeAdCardView()
+                    .padding(.top, 8)
+            }
         }
     }
 

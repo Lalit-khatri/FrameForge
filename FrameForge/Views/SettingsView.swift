@@ -344,6 +344,9 @@ struct SettingsView: View {
         highQualityPreview = false
         defaultCodec = "H.265"
         maxUndoSteps = 20
+        // Also persist UserDefaults-backed values so next launch reads correct defaults
+        UserDefaults.standard.set("1080p", forKey: "defaultResolution")
+        UserDefaults.standard.set("H.265", forKey: "defaultCodec")
         HapticManager.shared.success()
     }
 }
@@ -385,7 +388,8 @@ struct AboutView: View {
                                     )
                                 )
 
-                            Text("Version 1.0.0")
+                            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+                            Text("Version \(appVersion)")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
