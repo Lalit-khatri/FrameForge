@@ -24,11 +24,13 @@ struct ProjectsView: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                // Sticky header — never scrolls
                 headerSection
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 12)
+                    .background(Color.black)
 
+                // Scrollable content below
                 ScrollView {
                     VStack(spacing: 24) {
                         newProjectButton
@@ -39,6 +41,7 @@ struct ProjectsView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                    .padding(.top, 8)
                     .padding(.bottom, 40)
                 }
             }
@@ -119,7 +122,6 @@ struct ProjectsView: View {
                     .contentShape(Rectangle())
             }
         }
-        .padding(.top, 8)
     }
 
     private var newProjectButton: some View {
