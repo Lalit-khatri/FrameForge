@@ -5,6 +5,7 @@ struct ExportView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var settings = ExportSettings()
     @State private var showCancelConfirm = false
+    @State private var showProUpgrade = false
     @ObservedObject private var store = StoreKitManager.shared
 
     var body: some View {
@@ -115,6 +116,12 @@ struct ExportView: View {
         HStack(spacing: 8) {
             ForEach(ExportResolution.allCases, id: \.self) { res in
                 let isLocked = !store.isPro && (res == .qhd1440p || res == .uhd4k)
+                let isSelected = settings.resolution == res
+                let fgColor: Color = isSelected ? .white : (isLocked ? .gray.opacity(0.5) : .gray)
+                let bgColor: Color = isSelected
+                    ? Color(red: 0.42, green: 0.36, blue: 0.91)
+                    : Color.white.opacity(0.08)
+
                 Button(action: {
                     if isLocked {
                         showProUpgrade = true
@@ -130,14 +137,10 @@ struct ExportView: View {
                                 .font(.system(size: 8))
                         }
                     }
-                    .foregroundColor(settings.resolution == res ? .white : (isLocked ? .gray.opacity(0.5) : .gray))
+                    .foregroundColor(fgColor)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(
-                        settings.resolution == res
-                        ? Color(red: 0.42, green: 0.36, blue: 0.91)
-                        : Color.white.opacity(0.08)
-                    )
+                    .background(bgColor)
                     .cornerRadius(10)
                 }
             }
