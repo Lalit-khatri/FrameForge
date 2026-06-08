@@ -154,7 +154,7 @@ struct BeatSyncView: View {
     }
 
     private func applyBeatSync() {
-        viewModel.saveState()
+        viewModel.applyBeatSync(beats: detectedBeats, action: syncAction)
         HapticManager.shared.success()
     }
 }

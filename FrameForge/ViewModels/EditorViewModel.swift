@@ -836,6 +836,95 @@ final class EditorViewModel {
         tracks[ti].clips[ci].motionTrack = data
     }
 
+    /// Applies beat sync to the primary video track by splitting/transitioning clips at each beat timestamp.
+    func applyBeatSync(beats: [Double], action: SyncAction) {
+        guard !beats.isEmpty else { return }
+        saveState()
+
+        // Work on the first video track only
+        guard let trackIndex = tracks.indices.first(where: { tracks[$0].type == .video }) else { return }
+
+        // Sort beats and remove ones too close together or outside the timeline
+        let minGap = 0.15
+        let sortedBeats = beats.sorted()
+        var filteredBeats: [Double] = []
+        var lastBeat = -minGap
+        for beat in sortedBeats {
+            if beat - lastBeat >= minGap && beat < totalDuration - 0.1 {
+                filteredBeats.append(beat)
+                lastBeat = beat
+            }
+        }
+
+        var offset = 0  // track insertions to keep indices valid
+        let originalClipCount = tracks[trackIndex].clips.count
+
+        for beat in filteredBeats {
+            let adjustedIndex = offset
+            // Find which clip in the track contains this beat time
+            guard let clipIndex = (0..<tracks[trackIndex].clips.count).first(where: { i in
+                let c = tracks[trackIndex].clips[i]
+                return c.startTime < beat && c.endTime > beat
+            }) else { continue }
+
+            let clip = tracks[trackIndex].clips[clipIndex]
+            let relativeTime = beat - clip.startTime
+            guard relativeTime > 0.05 && relativeTime < clip.effectiveDuration - 0.05 else { continue }
+
+            let sourceTimeAtSplit = clip.trimStart + (relativeTime * Double(clip.speed))
+
+            var firstHalf = TimelineClip(
+                assetURL: clip.assetURL,
+                startTime: clip.startTime,
+                duration: clip.duration,
+                originalDuration: clip.originalDuration
+            )
+            firstHalf.trimStart = clip.trimStart
+            firstHalf.trimEnd  = clip.duration - sourceTimeAtSplit
+            firstHalf.speed    = clip.speed
+            firstHalf.volume   = clip.volume
+            firstHalf.filterID = clip.filterID
+            firstHalf.thumbnailData = clip.thumbnailData
+
+            var secondHalf = TimelineClip(
+                assetURL: clip.assetURL,
+                startTime: clip.startTime + relativeTime,
+                duration: clip.duration,
+                originalDuration: clip.originalDuration
+            )
+            secondHalf.trimStart = sourceTimeAtSplit
+            secondHalf.trimEnd   = clip.trimEnd
+            secondHalf.speed     = clip.speed
+            secondHalf.volume    = clip.volume
+            secondHalf.filterID  = clip.filterID
+            secondHalf.thumbnailData = clip.thumbnailData
+
+            // Apply beat action
+            switch action {
+            case .cut:
+                break  // plain cut — no extra modifications
+            case .transition:
+                // Set a quick fade transition on the first half
+                firstHalf.transitionID = "fade"
+                firstHalf.transitionDuration = 0.12
+            case .flash:
+                // Brief white flash effect on second half
+                let flashEffect = ClipEffect(type: .opacity, intensity: 0.0)
+                secondHalf.effects.append(flashEffect)
+            }
+
+            tracks[trackIndex].clips[clipIndex] = firstHalf
+            tracks[trackIndex].clips.insert(secondHalf, at: clipIndex + 1)
+            offset += 1
+        }
+
+        Task { await rebuildComposition() }
+        saveProject()
+        let count = filteredBeats.count
+        showToast(icon: "metronome", text: "\(count) beat sync cuts applied")
+        HapticManager.shared.success()
+    }
+
     func addFreezeFrame() {
         guard let clip = selectedClip else { return }
         saveState()
