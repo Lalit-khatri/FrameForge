@@ -99,6 +99,9 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showMasking) {
             MaskingView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showAspectRatio) {
+            AspectRatioSwitchView(viewModel: viewModel)
+        }
     }
 
     private var mainToolbar: some View {
@@ -166,6 +169,12 @@ struct ToolbarView: View {
                 }
                 toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
                     viewModel.showCurveSpeed = true
+                }
+                toolButton("Aspect", icon: "aspectratio", color: .white) {
+                    viewModel.showAspectRatio = true
+                }
+                toolButton("Fullscreen", icon: "arrow.up.left.and.arrow.down.right", color: .white) {
+                    viewModel.showFullscreenPreview = true
                 }
                 toolButton("Layer", icon: "square.3.layers.3d", color: .white) {
                     viewModel.addVideoTrack()
