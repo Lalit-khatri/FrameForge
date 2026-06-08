@@ -10,6 +10,8 @@ struct EditorView: View {
     @State private var pinchBaseScale: CGFloat?
     @State private var rotateBaseAngle: Double?
     @State private var showDiscardAlert = false
+    // Observe SettingsManager so editor re-renders when settings change live
+    @ObservedObject private var appSettings = SettingsManager.shared
 
     var body: some View {
         GeometryReader { geo in

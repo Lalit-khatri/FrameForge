@@ -2,7 +2,10 @@ import Foundation
 import Combine
 import UIKit
 
-final class SettingsManager: @unchecked Sendable {
+/// Manages all persistent app settings backed by UserDefaults.
+/// Conforms to ObservableObject so SwiftUI views can react to changes
+/// without requiring an app restart (e.g. EditorView grid overlay).
+final class SettingsManager: ObservableObject, @unchecked Sendable {
     static let shared = SettingsManager()
 
     private let defaults = UserDefaults.standard
@@ -20,20 +23,29 @@ final class SettingsManager: @unchecked Sendable {
         case maxUndoSteps
     }
 
-    private init() {
-        defaults.register(defaults: [
-            Key.defaultResolution.rawValue: "1080p",
-            Key.defaultFrameRate.rawValue: 30,
-            Key.autoSave.rawValue: true,
-            Key.autoSaveInterval.rawValue: 30,
-            Key.showGrid.rawValue: false,
-            Key.snapToGrid.rawValue: true,
-            Key.hapticFeedback.rawValue: true,
-            Key.highQualityPreview.rawValue: false,
-            Key.defaultCodec.rawValue: "H.265",
-            Key.maxUndoSteps.rawValue: 20,
-        ])
+    // MARK: - Published properties (drive live UI updates)
+
+    @Published var showGrid: Bool {
+        didSet { defaults.set(showGrid, forKey: Key.showGrid.rawValue) }
     }
+
+    @Published var snapToGrid: Bool {
+        didSet { defaults.set(snapToGrid, forKey: Key.snapToGrid.rawValue) }
+    }
+
+    @Published var hapticFeedbackEnabled: Bool {
+        didSet { defaults.set(hapticFeedbackEnabled, forKey: Key.hapticFeedback.rawValue) }
+    }
+
+    @Published var highQualityPreview: Bool {
+        didSet { defaults.set(highQualityPreview, forKey: Key.highQualityPreview.rawValue) }
+    }
+
+    @Published var autoSaveEnabled: Bool {
+        didSet { defaults.set(autoSaveEnabled, forKey: Key.autoSave.rawValue) }
+    }
+
+    // MARK: - Standard properties
 
     var defaultResolution: ExportResolution {
         let raw = defaults.string(forKey: Key.defaultResolution.rawValue) ?? "1080p"
@@ -49,34 +61,9 @@ final class SettingsManager: @unchecked Sendable {
         set { defaults.set(newValue, forKey: Key.defaultFrameRate.rawValue) }
     }
 
-    var autoSaveEnabled: Bool {
-        get { defaults.bool(forKey: Key.autoSave.rawValue) }
-        set { defaults.set(newValue, forKey: Key.autoSave.rawValue) }
-    }
-
     var autoSaveInterval: Int {
         get { defaults.integer(forKey: Key.autoSaveInterval.rawValue) }
         set { defaults.set(newValue, forKey: Key.autoSaveInterval.rawValue) }
-    }
-
-    var showGrid: Bool {
-        get { defaults.bool(forKey: Key.showGrid.rawValue) }
-        set { defaults.set(newValue, forKey: Key.showGrid.rawValue) }
-    }
-
-    var snapToGrid: Bool {
-        get { defaults.bool(forKey: Key.snapToGrid.rawValue) }
-        set { defaults.set(newValue, forKey: Key.snapToGrid.rawValue) }
-    }
-
-    var hapticFeedbackEnabled: Bool {
-        get { defaults.bool(forKey: Key.hapticFeedback.rawValue) }
-        set { defaults.set(newValue, forKey: Key.hapticFeedback.rawValue) }
-    }
-
-    var highQualityPreview: Bool {
-        get { defaults.bool(forKey: Key.highQualityPreview.rawValue) }
-        set { defaults.set(newValue, forKey: Key.highQualityPreview.rawValue) }
     }
 
     var defaultCodec: VideoCodec {
@@ -92,6 +79,32 @@ final class SettingsManager: @unchecked Sendable {
         get { defaults.integer(forKey: Key.maxUndoSteps.rawValue) }
         set { defaults.set(newValue, forKey: Key.maxUndoSteps.rawValue) }
     }
+
+    // MARK: - Init
+
+    private init() {
+        defaults.register(defaults: [
+            Key.defaultResolution.rawValue: "1080p",
+            Key.defaultFrameRate.rawValue: 30,
+            Key.autoSave.rawValue: true,
+            Key.autoSaveInterval.rawValue: 30,
+            Key.showGrid.rawValue: false,
+            Key.snapToGrid.rawValue: true,
+            Key.hapticFeedback.rawValue: true,
+            Key.highQualityPreview.rawValue: false,
+            Key.defaultCodec.rawValue: "H.265",
+            Key.maxUndoSteps.rawValue: 20,
+        ])
+
+        // Initialize @Published vars from UserDefaults
+        showGrid = defaults.bool(forKey: Key.showGrid.rawValue)
+        snapToGrid = defaults.bool(forKey: Key.snapToGrid.rawValue)
+        hapticFeedbackEnabled = defaults.bool(forKey: Key.hapticFeedback.rawValue)
+        highQualityPreview = defaults.bool(forKey: Key.highQualityPreview.rawValue)
+        autoSaveEnabled = defaults.bool(forKey: Key.autoSave.rawValue)
+    }
+
+    // MARK: - Helpers
 
     func defaultExportSettings() -> ExportSettings {
         var s = ExportSettings()
@@ -162,5 +175,11 @@ final class SettingsManager: @unchecked Sendable {
         for key in keys {
             defaults.removeObject(forKey: key.rawValue)
         }
+        // Re-sync @Published vars to their reset defaults
+        showGrid = false
+        snapToGrid = true
+        hapticFeedbackEnabled = true
+        highQualityPreview = false
+        autoSaveEnabled = true
     }
 }
