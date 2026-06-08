@@ -21,7 +21,7 @@ struct ProjectsView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.black
 
             VStack(spacing: 0) {
                 // Sticky header — never scrolls
@@ -29,6 +29,7 @@ struct ProjectsView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 12)
                     .background(Color.black)
+                    .padding(.top, 24)
 
                 // Scrollable content below
                 ScrollView {
