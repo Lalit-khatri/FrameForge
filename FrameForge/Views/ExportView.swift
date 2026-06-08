@@ -3,7 +3,7 @@ import SwiftUI
 struct ExportView: View {
     @Bindable var viewModel: EditorViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var settings = ExportSettings()
+    @State private var settings = SettingsManager.shared.defaultExportSettings()
     @State private var showCancelConfirm = false
     @State private var showProUpgrade = false
     @ObservedObject private var store = StoreKitManager.shared
