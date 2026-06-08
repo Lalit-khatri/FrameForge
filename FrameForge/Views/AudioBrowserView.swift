@@ -155,6 +155,19 @@ struct AudioBrowserView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
+            // Disclaimer: iTunes API provides 30s previews only
+            HStack(spacing: 6) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 11))
+                    .foregroundColor(.gray.opacity(0.6))
+                Text("Tap ＋ to import a 30-second preview sample. Full tracks require license.")
+                    .font(.system(size: 10))
+                    .foregroundColor(.gray.opacity(0.6))
+                    .lineLimit(2)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 6)
+
             if isSearching {
                 Spacer()
                 ProgressView()
@@ -216,6 +229,7 @@ struct AudioBrowserView: View {
                     .font(.system(size: 12))
                     .foregroundColor(.gray)
                     .lineLimit(1)
+                // Show full song duration
                 Text(formatDuration(result.duration))
                     .font(.system(size: 10))
                     .foregroundColor(.gray.opacity(0.7))
@@ -233,13 +247,20 @@ struct AudioBrowserView: View {
                 }
             }
 
+            // Import button — clearly labelled as 30s preview
             Button {
                 importPreview(result)
             } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.green)
+                VStack(spacing: 2) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.green)
+                    Text("30s")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.green.opacity(0.8))
+                }
             }
+            .help("Imports a 30-second iTunes preview sample")  // tooltip on macOS
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 12)
