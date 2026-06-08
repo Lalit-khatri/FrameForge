@@ -42,14 +42,25 @@ struct CaptionsView: View {
     }
 
     private func startTranscription() async {
+        // Guard: check that there is at least one video clip with audio
+        let hasVideoClips = viewModel.tracks.contains(where: {
+            $0.type == .video && !$0.clips.isEmpty && $0.clips.contains(where: { $0.assetURL != nil })
+        })
+        guard hasVideoClips else {
+            engine.error = "No video clips found. Add video clips to the timeline before generating captions."
+            return
+        }
+
         let authorized = await engine.requestPermission()
         guard authorized else {
-            engine.error = "Speech recognition permission denied. Enable it in Settings → Privacy → Speech Recognition."
+            engine.error = "Speech recognition permission denied. Tap \"Open Settings\" to enable it under Privacy → Speech Recognition."
             return
         }
         await engine.generateCaptions(from: viewModel.tracks)
         if engine.error == nil && !engine.segments.isEmpty {
             phase = .styling
+        } else if engine.error == nil && engine.segments.isEmpty {
+            engine.error = "No speech detected in the video audio. Make sure your video has audible speech."
         }
     }
 
@@ -104,12 +115,14 @@ struct CaptionsView: View {
     }
 
     private func errorState(_ message: String) -> some View {
-        VStack(spacing: 20) {
+        let isPermissionError = message.contains("permission denied")
+
+        return VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: isPermissionError ? "lock.fill" : "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.orange)
-            Text("Caption Error")
+                .foregroundColor(isPermissionError ? .red : .orange)
+            Text(isPermissionError ? "Permission Required" : "Caption Error")
                 .font(.title3.bold())
                 .foregroundColor(.white)
             Text(message)
@@ -117,13 +130,29 @@ struct CaptionsView: View {
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            if isPermissionError {
+                Button(action: {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "gear")
+                        Text("Open Settings")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 12)
+                    .background(Color(red: 0.42, green: 0.36, blue: 0.91))
+                    .cornerRadius(14)
+                }
+            }
+
             Button("Dismiss") { dismiss() }
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 12)
-                .background(Color(red: 0.42, green: 0.36, blue: 0.91))
-                .cornerRadius(14)
+                .font(.subheadline)
+                .foregroundColor(.gray)
             Spacer()
         }
     }
