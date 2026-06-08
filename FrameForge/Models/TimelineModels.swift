@@ -69,6 +69,7 @@ struct TimelineClip: Identifiable, Codable {
     var pipPosition: String?
     var pipScale: Float?
     var isReversed: Bool = false
+    var speedCurve: SpeedCurveData?
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)
@@ -99,6 +100,33 @@ struct TimelineClip: Identifiable, Codable {
         self.isMuted = false
         self.keyframeAnimation = nil
         self.motionTrack = nil
+        self.speedCurve = nil
+    }
+}
+
+// MARK: - Speed Curve
+
+/// Stores the Catmull-Rom control points for variable speed playback.
+/// Y=0 → fast (8×), Y=0.5 → normal (1×), Y=1 → slow (0.1×).
+struct SpeedCurveData: Codable {
+    /// Normalised control points (x: position 0…1, y: speed-inverse 0…1)
+    var controlPoints: [CGPoint]
+
+    /// Maps Y-normalised value to a speed multiplier.
+    static func speedFor(y: Double) -> Double {
+        let t = 1.0 - y  // flip: t=1 at top (fast)
+        if t >= 0.5 {
+            return 1.0 + (t - 0.5) * 14.0   // 1x … 8x
+        } else {
+            return 0.1 + t * 1.8             // 0.1x … 1x
+        }
+    }
+
+    /// Average speed across all control points — used as the clip's stored `speed`
+    /// so that `effectiveDuration` is approximately correct.
+    var averageSpeedMultiplier: Float {
+        let avg = controlPoints.map { Self.speedFor(y: Double($0.y)) }.reduce(0, +) / Double(controlPoints.count)
+        return Float(avg)
     }
 }
 

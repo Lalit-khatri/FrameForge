@@ -670,10 +670,27 @@ final class EditorViewModel {
         for i in 0..<tracks.count {
             if let j = tracks[i].clips.firstIndex(where: { $0.id == clipID }) {
                 tracks[i].clips[j].speed = speed
+                tracks[i].clips[j].speedCurve = nil  // clear any existing curve
             }
         }
         recalculateStartTimes()
         Task { await rebuildComposition() }
+    }
+
+    /// Apply a speed curve (Catmull-Rom control points from SpeedControlView) to a clip.
+    /// Y=0 = fast (8x), Y=0.5 = normal (1x), Y=1 = slow (0.1x).
+    func setSpeedCurve(curvePoints: [CGPoint], forClip clipID: UUID) {
+        saveState()
+        let curveData = SpeedCurveData(controlPoints: curvePoints)
+        for i in 0..<tracks.count {
+            if let j = tracks[i].clips.firstIndex(where: { $0.id == clipID }) {
+                tracks[i].clips[j].speedCurve = curveData
+                tracks[i].clips[j].speed = curveData.averageSpeedMultiplier
+            }
+        }
+        recalculateStartTimes()
+        Task { await rebuildComposition() }
+        showToast(icon: "waveform.path", text: "Speed curve applied")
     }
 
     func setVolume(_ volume: Float, forClip clipID: UUID) {
