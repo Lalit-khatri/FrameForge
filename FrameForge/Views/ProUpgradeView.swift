@@ -7,6 +7,7 @@ struct ProUpgradeView: View {
     @State private var errorMessage = ""
     @State private var showRestoreResult = false
     @State private var restoreResultMessage = ""
+    @State private var productLoadFailed = false
 
     var body: some View {
         NavigationStack {
@@ -42,6 +43,22 @@ struct ProUpgradeView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(restoreResultMessage)
+            }
+            .onAppear {
+                // Retry product fetch if not yet loaded
+                if store.proProduct == nil {
+                    productLoadFailed = false
+                    Task {
+                        await store.loadProducts()
+                        // If still nil after 8 seconds, show failure state
+                        if store.proProduct == nil {
+                            try? await Task.sleep(nanoseconds: 8_000_000_000)
+                            if store.proProduct == nil {
+                                productLoadFailed = true
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -149,11 +166,21 @@ struct ProUpgradeView: View {
                     ProgressView()
                         .tint(.white)
                 } else if store.proProduct == nil {
-                    HStack(spacing: 8) {
-                        ProgressView().tint(.white).scaleEffect(0.8)
-                        Text("Loading price...")
+                    if productLoadFailed {
+                        VStack(spacing: 6) {
+                            Text("Price unavailable")
+                                .font(.headline)
+                            Text("Check your connection and try again")
+                                .font(.caption)
+                                .opacity(0.7)
+                        }
+                    } else {
+                        HStack(spacing: 8) {
+                            ProgressView().tint(.white).scaleEffect(0.8)
+                            Text("Loading price...")
+                        }
+                        .font(.headline)
                     }
-                    .font(.headline)
                 } else {
                     Text("Upgrade for \(store.proProduct!.displayPrice)")
                         .font(.headline)
