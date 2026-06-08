@@ -17,6 +17,9 @@ struct SettingsView: View {
     @State private var showClearCacheConfirmation = false
     @State private var showProUpgrade = false
     @State private var showTipJar = false
+    @State private var isRestoring = false
+    @State private var showRestoreResult = false
+    @State private var restoreResultMessage = ""
     @ObservedObject private var store = StoreKitManager.shared
 
     private let settings = SettingsManager.shared
@@ -75,6 +78,11 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showTipJar) {
                 TipJarView()
+            }
+            .alert("Restore Purchases", isPresented: $showRestoreResult) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(restoreResultMessage)
             }
         }
     }
@@ -303,16 +311,36 @@ struct SettingsView: View {
     private var restoreSection: some View {
         Section {
             Button(action: {
-                Task { await store.restorePurchases() }
+                guard !isRestoring else { return }
+                isRestoring = true
+                Task {
+                    await store.restorePurchases()
+                    isRestoring = false
+                    restoreResultMessage = store.isPro
+                        ? "✅ Pro purchase restored successfully!"
+                        : "No previous purchase found for this Apple ID."
+                    showRestoreResult = true
+                }
             }) {
                 HStack {
                     Text("Restore Purchases")
-                        .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
+                        .foregroundColor(
+                            isRestoring
+                                ? .gray
+                                : Color(red: 0.42, green: 0.36, blue: 0.91)
+                        )
                     Spacer()
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundColor(.gray)
+                    if isRestoring {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(.gray)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.gray)
+                    }
                 }
             }
+            .disabled(isRestoring)
         }
         .listRowBackground(Color.white.opacity(0.05))
     }
