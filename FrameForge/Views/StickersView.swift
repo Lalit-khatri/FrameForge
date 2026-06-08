@@ -37,7 +37,7 @@ struct StickersView: View {
                 }
             }
             .onAppear {
-                if gifResults.isEmpty {
+                if gifResults.isEmpty && !tenorAPIKey.isEmpty {
                     loadTrendingGifs()
                 }
             }
@@ -202,7 +202,23 @@ struct StickersView: View {
 
     private var gifGrid: some View {
         ScrollView {
-            if isSearchingGifs {
+            if tenorAPIKey.isEmpty {
+                // No API key configured
+                VStack(spacing: 16) {
+                    Image(systemName: "key.slash")
+                        .font(.system(size: 44))
+                        .foregroundColor(.gray.opacity(0.4))
+                    Text("GIF Search Unavailable")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text("A Tenor API key is required. Add \"TenorAPIKey\" to Info.plist to enable GIF search.")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .padding(.top, 60)
+            } else if isSearchingGifs {
                 ProgressView()
                     .tint(.gray)
                     .padding(.top, 40)
@@ -276,7 +292,7 @@ struct StickersView: View {
     }
 
     private func searchGifs() {
-        guard !searchText.isEmpty else { return }
+        guard !searchText.isEmpty, !tenorAPIKey.isEmpty else { return }
         isSearchingGifs = true
         let query = searchText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? searchText
         let urlString = "https://tenor.googleapis.com/v2/search?q=\(query)&key=\(tenorAPIKey)&client_key=frameforge&limit=30"
