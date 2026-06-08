@@ -39,10 +39,10 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 proSection
+                tipJarSection
                 projectDefaults
                 editorPreferences
                 previewSection
-                tipJarSection
                 storageSection
                 restoreSection
                 resetSection
