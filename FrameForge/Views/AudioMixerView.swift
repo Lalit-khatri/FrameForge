@@ -163,71 +163,135 @@ struct AudioMixerView: View {
         }
     }
 
+    // MARK: - Audio Effects
+
     private var audioEffects: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Audio Effects")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                Spacer()
-                Text("Coming Soon")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.white.opacity(0.6))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(8)
+            Text("Audio Effects")
+                .font(.subheadline.bold())
+                .foregroundColor(.white)
+
+            // --- Fade In / Fade Out (clip-level, real parameter controls) ---
+            VStack(spacing: 10) {
+                fadeControl(
+                    label: "Fade In",
+                    icon: "arrow.up.right",
+                    duration: Binding(
+                        get: { viewModel.globalFadeIn },
+                        set: { viewModel.setGlobalFade(fadeIn: $0, fadeOut: viewModel.globalFadeOut) }
+                    )
+                )
+                Divider().background(Color.white.opacity(0.08))
+                fadeControl(
+                    label: "Fade Out",
+                    icon: "arrow.down.right",
+                    duration: Binding(
+                        get: { viewModel.globalFadeOut },
+                        set: { viewModel.setGlobalFade(fadeIn: viewModel.globalFadeIn, fadeOut: $0) }
+                    )
+                )
             }
+            .padding()
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(14)
+
+            // --- Toggle effects (applied at export) ---
+            Text("Export Effects")
+                .font(.caption.bold())
+                .foregroundColor(.gray)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                audioEffectCard("Fade In", icon: "arrow.up.right", description: "Gradually increase volume")
-                audioEffectCard("Fade Out", icon: "arrow.down.right", description: "Gradually decrease volume")
-                audioEffectCard("Noise Reduce", icon: "waveform.badge.minus", description: "Remove background noise")
-                audioEffectCard("Voice Enhance", icon: "person.wave.2", description: "Enhance vocal clarity")
-                audioEffectCard("Echo", icon: "repeat", description: "Add echo effect")
-                audioEffectCard("Reverb", icon: "waveform.circle", description: "Add reverb effect")
+                audioToggleCard("Noise Reduce", icon: "waveform.badge.minus",
+                                description: "Remove background noise",
+                                effect: "noiseReduce")
+                audioToggleCard("Voice Enhance", icon: "person.wave.2",
+                                description: "Boost vocal clarity",
+                                effect: "voiceEnhance")
+                audioToggleCard("Echo", icon: "repeat",
+                                description: "Add echo effect",
+                                effect: "echo")
+                audioToggleCard("Reverb", icon: "waveform.circle",
+                                description: "Add reverb effect",
+                                effect: "reverb")
             }
         }
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(16)
-        .opacity(0.6)
     }
 
-    private func audioEffectCard(_ name: String, icon: String, description: String) -> some View {
-        let isActive = viewModel.activeAudioEffects.contains(name)
+    private func fadeControl(label: String, icon: String, duration: Binding<Double>) -> some View {
+        let isActive = duration.wrappedValue > 0
+
+        return VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundColor(isActive
+                                     ? Color(red: 0.42, green: 0.36, blue: 0.91)
+                                     : .gray)
+                    .frame(width: 24)
+
+                Text(label)
+                    .font(.caption.bold())
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                if isActive {
+                    Text(String(format: "%.1fs", duration.wrappedValue))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
+                }
+
+                Toggle("", isOn: Binding(
+                    get: { isActive },
+                    set: { on in
+                        withAnimation { duration.wrappedValue = on ? 1.0 : 0.0 }
+                        HapticManager.shared.selection()
+                    }
+                ))
+                .labelsHidden()
+                .tint(Color(red: 0.42, green: 0.36, blue: 0.91))
+                .scaleEffect(0.85)
+            }
+
+            if isActive {
+                Slider(value: duration, in: 0.2...5.0, step: 0.1)
+                    .tint(Color(red: 0.42, green: 0.36, blue: 0.91))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+
+    private func audioToggleCard(_ name: String, icon: String, description: String, effect: String) -> some View {
+        let isActive = viewModel.activeAudioEffects.contains(effect)
         return Button(action: {
-            viewModel.toggleAudioEffect(name)
+            viewModel.toggleAudioEffect(effect)
+            HapticManager.shared.selection()
         }) {
             VStack(spacing: 6) {
-                ZStack {
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(isActive ? .white : Color(red: 0.42, green: 0.36, blue: 0.91))
-
-                    if isActive {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.green)
-                            .offset(x: 14, y: -10)
-                    }
-                }
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(isActive ? Color(red: 0.42, green: 0.36, blue: 0.91) : .gray)
                 Text(name)
                     .font(.caption.bold())
-                    .foregroundColor(isActive ? .white : .white.opacity(0.8))
+                    .foregroundColor(.white)
                 Text(description)
                     .font(.system(size: 9))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .background(isActive
-                ? Color(red: 0.42, green: 0.36, blue: 0.91).opacity(0.25)
-                : Color.white.opacity(0.03))
+                ? Color(red: 0.42, green: 0.36, blue: 0.91).opacity(0.2)
+                : Color.white.opacity(0.04))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isActive ? Color(red: 0.42, green: 0.36, blue: 0.91) : Color.clear, lineWidth: 1.5)
+                    .stroke(isActive ? Color(red: 0.42, green: 0.36, blue: 0.91) : Color.clear,
+                            lineWidth: 1.5)
             )
             .cornerRadius(12)
         }

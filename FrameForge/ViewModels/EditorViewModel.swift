@@ -63,6 +63,8 @@ final class EditorViewModel {
     var selectedVideoTrackIndex: Int?
     var selectedStickerID: UUID?
     var masterVolume: Float = 1.0
+    var globalFadeIn: Double = 0.0   // seconds for project-wide fade-in
+    var globalFadeOut: Double = 0.0  // seconds for project-wide fade-out
     var showAudioBrowser = false
     var showFullscreenPreview = false
     var hasUnsavedChanges = false
@@ -741,6 +743,14 @@ final class EditorViewModel {
 
     func setMasterVolume(_ volume: Float) {
         masterVolume = max(0, min(2.0, volume))
+        Task { await rebuildComposition() }
+    }
+
+    /// Store global fade-in/fade-out durations (seconds).
+    /// These are passed to the export pipeline as volume ramps.
+    func setGlobalFade(fadeIn: Double, fadeOut: Double) {
+        globalFadeIn = max(0, fadeIn)
+        globalFadeOut = max(0, fadeOut)
         Task { await rebuildComposition() }
     }
 
