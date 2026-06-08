@@ -75,7 +75,83 @@ struct SplitScreenView: View {
 
     private func applySplitScreen() {
         viewModel.saveState()
+
+        // Ensure we have at least 2 video tracks (create second if missing)
+        let videoIndices = viewModel.tracks.indices.filter { viewModel.tracks[$0].type == .video }
+        guard videoIndices.count >= 1 else {
+            HapticManager.shared.warning()
+            return
+        }
+
+        // If only 1 video track, create a second by duplicating its structure
+        if videoIndices.count < 2 {
+            viewModel.addVideoTrack()
+        }
+
+        // Re-query after potential insertion
+        let vIndices = viewModel.tracks.indices.filter { viewModel.tracks[$0].type == .video }
+        guard vIndices.count >= 2 else { return }
+
+        let i0 = vIndices[0]  // first video track
+        let i1 = vIndices[1]  // second video track
+
+        // Assign transform per layout
+        switch selectedLayout {
+        case .halfHorizontal:
+            // Top half / Bottom half
+            viewModel.updateTrackPosition(trackIndex: i0, position: CGPoint(x: 0.5, y: 0.25))
+            viewModel.updateTrackScale(trackIndex: i0, scale: 1.0)
+            viewModel.updateTrackPosition(trackIndex: i1, position: CGPoint(x: 0.5, y: 0.75))
+            viewModel.updateTrackScale(trackIndex: i1, scale: 1.0)
+
+        case .halfVertical:
+            // Left half / Right half
+            viewModel.updateTrackPosition(trackIndex: i0, position: CGPoint(x: 0.25, y: 0.5))
+            viewModel.updateTrackScale(trackIndex: i0, scale: 0.5)
+            viewModel.updateTrackPosition(trackIndex: i1, position: CGPoint(x: 0.75, y: 0.5))
+            viewModel.updateTrackScale(trackIndex: i1, scale: 0.5)
+
+        case .thirds:
+            // Add third track if needed
+            if vIndices.count < 3 { viewModel.addVideoTrack() }
+            let v3 = viewModel.tracks.indices.filter { viewModel.tracks[$0].type == .video }
+            if v3.count >= 3 {
+                viewModel.updateTrackPosition(trackIndex: v3[0], position: CGPoint(x: 0.17, y: 0.5))
+                viewModel.updateTrackScale(trackIndex: v3[0], scale: 0.33)
+                viewModel.updateTrackPosition(trackIndex: v3[1], position: CGPoint(x: 0.5, y: 0.5))
+                viewModel.updateTrackScale(trackIndex: v3[1], scale: 0.33)
+                viewModel.updateTrackPosition(trackIndex: v3[2], position: CGPoint(x: 0.83, y: 0.5))
+                viewModel.updateTrackScale(trackIndex: v3[2], scale: 0.33)
+            }
+
+        case .quadrant:
+            // Add tracks 3 and 4 if needed
+            while viewModel.tracks.filter({ $0.type == .video }).count < 4 { viewModel.addVideoTrack() }
+            let v4 = viewModel.tracks.indices.filter { viewModel.tracks[$0].type == .video }
+            if v4.count >= 4 {
+                viewModel.updateTrackPosition(trackIndex: v4[0], position: CGPoint(x: 0.25, y: 0.25)); viewModel.updateTrackScale(trackIndex: v4[0], scale: 0.5)
+                viewModel.updateTrackPosition(trackIndex: v4[1], position: CGPoint(x: 0.75, y: 0.25)); viewModel.updateTrackScale(trackIndex: v4[1], scale: 0.5)
+                viewModel.updateTrackPosition(trackIndex: v4[2], position: CGPoint(x: 0.25, y: 0.75)); viewModel.updateTrackScale(trackIndex: v4[2], scale: 0.5)
+                viewModel.updateTrackPosition(trackIndex: v4[3], position: CGPoint(x: 0.75, y: 0.75)); viewModel.updateTrackScale(trackIndex: v4[3], scale: 0.5)
+            }
+
+        case .pipOverlay:
+            // Full frame primary, small overlay in bottom-right
+            viewModel.updateTrackPosition(trackIndex: i0, position: CGPoint(x: 0.5, y: 0.5))
+            viewModel.updateTrackScale(trackIndex: i0, scale: 1.0)
+            viewModel.updateTrackPosition(trackIndex: i1, position: CGPoint(x: 0.8, y: 0.78))
+            viewModel.updateTrackScale(trackIndex: i1, scale: 0.3)
+
+        case .diagonal:
+            // Left-top / right-bottom diagonal split (scale 0.5, diagonal crop)
+            viewModel.updateTrackPosition(trackIndex: i0, position: CGPoint(x: 0.25, y: 0.25))
+            viewModel.updateTrackScale(trackIndex: i0, scale: 0.5)
+            viewModel.updateTrackPosition(trackIndex: i1, position: CGPoint(x: 0.75, y: 0.75))
+            viewModel.updateTrackScale(trackIndex: i1, scale: 0.5)
+        }
+
         HapticManager.shared.success()
+        viewModel.showToast(icon: "rectangle.split.2x2", text: "\(selectedLayout.label) split applied")
     }
 }
 
