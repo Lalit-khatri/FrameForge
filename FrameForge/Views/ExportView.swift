@@ -273,48 +273,62 @@ struct ExportView: View {
     }
 
     private var exportingView: some View {
-        VStack(spacing: 24) {
-            ZStack {
-                Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 8)
-                    .frame(width: 120, height: 120)
-                Circle()
-                    .trim(from: 0, to: CGFloat(viewModel.exportProgress))
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
-                                     Color(red: 0.99, green: 0.32, blue: 0.56)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 120, height: 120)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut, value: viewModel.exportProgress)
+        ScrollView {
+            VStack(spacing: 20) {
 
-                Text("\(Int(viewModel.exportProgress * 100))%")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                // ── Video Ad (free users only) — shown at top while user waits ──
+                if !store.isPro {
+                    VideoAdContainerView()
+                        .padding(.top, 8)
+                }
+
+                // ── Circular progress ring ──
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.1), lineWidth: 8)
+                        .frame(width: 120, height: 120)
+                    Circle()
+                        .trim(from: 0, to: CGFloat(viewModel.exportProgress))
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color(red: 0.42, green: 0.36, blue: 0.91),
+                                         Color(red: 0.99, green: 0.32, blue: 0.56)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
+                        .frame(width: 120, height: 120)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut, value: viewModel.exportProgress)
+
+                    Text("\(Int(viewModel.exportProgress * 100))%")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                .padding(.top, store.isPro ? 32 : 0)
+
+                Text("Exporting...")
+                    .font(.headline)
                     .foregroundColor(.white)
-            }
+                Text("Please keep the app open")
+                    .font(.caption)
+                    .foregroundColor(.gray)
 
-            Text("Exporting...")
-                .font(.headline)
-                .foregroundColor(.white)
-            Text("Please keep the app open")
-                .font(.caption)
-                .foregroundColor(.gray)
+                Button(action: { showCancelConfirm = true }) {
+                    Text("Cancel Export")
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                }
 
-            Button(action: { showCancelConfirm = true }) {
-                Text("Cancel Export")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-            }
+                Spacer(minLength: 12)
 
-            // Show ad banner for free users during export wait
-            if !store.isPro {
-                AdBannerContainer()
-                    .padding(.top, 12)
+                // ── Small banner ad at the bottom (free users only) ──
+                if !store.isPro {
+                    AdBannerContainer()
+                        .padding(.bottom, 8)
+                }
             }
+            .padding(.horizontal, 16)
         }
     }
 
