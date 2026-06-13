@@ -4,6 +4,10 @@
 <dict>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8035596577604363~8815402433</string>
+	<key>GADVideoAdUnitID</key>
+	<string>ca-app-pub-8035596577604363/XXXXXXXXXX</string>
+	<key>TenorAPIKey</key>
+	<string>YOUR_TENOR_API_KEY_HERE</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FrameForge needs access to your photo library to import videos and images for editing.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

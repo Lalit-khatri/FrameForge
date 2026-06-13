@@ -17,6 +17,11 @@ targets:
       properties:
         UILaunchScreen: {}
         GADApplicationIdentifier: ca-app-pub-8035596577604363~8815402433
+        # Production 300×250 medium-rectangle ad unit (supports video creatives).
+        # Replace XXXXXXXXXX with your real ad unit ID from AdMob console.
+        GADVideoAdUnitID: ca-app-pub-8035596577604363/XXXXXXXXXX
+        # Tenor API key for GIF sticker search. Get one at https://developers.google.com/tenor
+        TenorAPIKey: YOUR_TENOR_API_KEY_HERE
         NSPhotoLibraryUsageDescription: FrameForge needs access to your photo library to import videos and images for editing.
         NSPhotoLibraryAddUsageDescription: FrameForge needs permission to save exported videos to your photo library.
         NSMicrophoneUsageDescription: FrameForge needs microphone access to record voiceovers for your projects.
