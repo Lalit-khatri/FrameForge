@@ -197,6 +197,9 @@ final class EditorViewModel {
     }
 
     func showToast(icon: String, text: String) {
+        // Setting a new ToastMessage (with a new UUID) causes ToastOverlay
+        // to treat it as a fresh view, reliably firing .onAppear and restarting
+        // the dismiss timer — even for rapid back-to-back calls.
         withAnimation(.spring(response: 0.3)) {
             toastMessage = ToastMessage(icon: icon, text: text)
         }
