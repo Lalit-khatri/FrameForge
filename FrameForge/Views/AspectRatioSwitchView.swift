@@ -2,22 +2,28 @@ import SwiftUI
 
 struct AspectRatioSwitchView: View {
     @Bindable var viewModel: EditorViewModel
-    let project: Project
     @Environment(\.dismiss) private var dismiss
+
+    // Read the project directly from the ViewModel (it holds a weak reference
+    // set during attachProject). No need to pass it separately.
+    private var project: Project? { viewModel.currentProject }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                VStack(spacing: 24) {
-                    currentPreview
-
-                    ratioGrid
-
-                    applyNote
+                if let project {
+                    VStack(spacing: 24) {
+                        currentPreview(project: project)
+                        ratioGrid(project: project)
+                        applyNote
+                    }
+                    .padding()
+                } else {
+                    Text("No project loaded")
+                        .foregroundColor(.gray)
                 }
-                .padding()
             }
             .navigationTitle("Canvas Size")
             .navigationBarTitleDisplayMode(.inline)
@@ -32,7 +38,7 @@ struct AspectRatioSwitchView: View {
         .presentationDragIndicator(.visible)
     }
 
-    private var currentPreview: some View {
+    private func currentPreview(project: Project) -> some View {
         VStack(spacing: 8) {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color(red: 0.42, green: 0.36, blue: 0.91), lineWidth: 2)
@@ -52,15 +58,15 @@ struct AspectRatioSwitchView: View {
         }
     }
 
-    private var ratioGrid: some View {
+    private func ratioGrid(project: Project) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             ForEach(AspectRatio.allCases, id: \.self) { ratio in
-                ratioCard(ratio)
+                ratioCard(ratio, project: project)
             }
         }
     }
 
-    private func ratioCard(_ ratio: AspectRatio) -> some View {
+    private func ratioCard(_ ratio: AspectRatio, project: Project) -> some View {
         let isActive = project.aspectRatio == ratio
         return Button(action: {
             project.aspectRatio = ratio
