@@ -10,6 +10,7 @@ struct EditorView: View {
     @State private var pinchBaseScale: CGFloat?
     @State private var rotateBaseAngle: Double?
     @State private var showDiscardAlert = false
+    @State private var isLandscape: Bool = UIDevice.current.orientation.isLandscape
     // Observe SettingsManager so editor re-renders when settings change live
     @ObservedObject private var appSettings = SettingsManager.shared
 
@@ -34,6 +35,15 @@ struct EditorView: View {
             .ignoresSafeArea(.container, edges: .bottom)
         }
         .ignoresSafeArea(.keyboard)
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIDevice.orientationDidChangeNotification
+        )) { _ in
+            // Update landscape state so the preview height recalculates
+            // smoothly instead of snapping on rotation.
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isLandscape = UIDevice.current.orientation.isLandscape
+            }
+        }
         .sheet(isPresented: $viewModel.showMediaPicker) {
             MediaPickerView(viewModel: viewModel)
         }
@@ -293,8 +303,9 @@ struct EditorView: View {
                     }
                 }
             }
-            .frame(height: geo.size.height * 0.40)
+            .frame(height: geo.size.height * (isLandscape ? 0.55 : 0.40))
             .clipped()
+            .animation(.easeInOut(duration: 0.25), value: isLandscape)
         }
         .contentShape(Rectangle())
         .zIndex(1)
@@ -479,15 +490,26 @@ struct VideoPlayerView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        if let playerView = uiView as? PlayerUIView {
-            playerView.playerLayer.player = player
-        }
+        guard let playerView = uiView as? PlayerUIView else { return }
+        // Always keep player in sync (e.g. after composition rebuild)
+        playerView.playerLayer.player = player
+        // Force the layer to re-layout to match the new bounds after rotation
+        playerView.setNeedsLayout()
+        playerView.layoutIfNeeded()
     }
 }
 
 class PlayerUIView: UIView {
     override class var layerClass: AnyClass { AVPlayerLayer.self }
     var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+
+    // CRITICAL: override layoutSubviews so the AVPlayerLayer frame is always
+    // synced with the UIView bounds. Without this, after portrait→landscape→portrait
+    // the layer retains the landscape frame size, making the video wrong-sized.
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        playerLayer.frame = bounds
+    }
 }
 
 extension EditorView {
