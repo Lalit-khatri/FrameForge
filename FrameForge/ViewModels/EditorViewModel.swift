@@ -1246,7 +1246,9 @@ final class EditorViewModel {
 
     // MARK: - Video Reversal
 
-    /// Creates a reversed copy of a video file by reading samples in reverse order.
+    /// Creates a reversed copy of a video file using memory-efficient chunked processing.
+    /// Instead of loading all frames at once (which causes OOM crashes), this reads
+    /// the video in small reverse-order chunks.
     private func createReversedVideo(from sourceURL: URL) async -> URL? {
         let asset = AVURLAsset(url: sourceURL)
         guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else { return nil }
@@ -1255,34 +1257,19 @@ final class EditorViewModel {
         guard let duration = duration else { return nil }
         let naturalSize = try? await videoTrack.load(.naturalSize)
         let transform = try? await videoTrack.load(.preferredTransform)
+        let nominalFrameRate = try? await videoTrack.load(.nominalFrameRate)
 
         guard let naturalSize = naturalSize else { return nil }
         let size = naturalSize.applying(transform ?? .identity)
         let outputSize = CGSize(width: abs(size.width), height: abs(size.height))
+        let fps = nominalFrameRate ?? 30.0
 
         // Output file
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("reversed_\(UUID().uuidString).mp4")
         try? FileManager.default.removeItem(at: outputURL)
 
-        // Read all video sample buffers
-        guard let reader = try? AVAssetReader(asset: asset) else { return nil }
-        let readerOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ])
-        readerOutput.alwaysCopiesSampleData = false
-        reader.add(readerOutput)
-        reader.startReading()
-
-        var samples: [CMSampleBuffer] = []
-        while let sample = readerOutput.copyNextSampleBuffer() {
-            samples.append(sample)
-        }
-        reader.cancelReading()
-
-        guard !samples.isEmpty else { return nil }
-
-        // Write samples in reverse
+        // Setup writer
         guard let writer = try? AVAssetWriter(outputURL: outputURL, fileType: .mp4) else { return nil }
         let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -1298,14 +1285,80 @@ final class EditorViewModel {
         writer.startWriting()
         writer.startSession(atSourceTime: .zero)
 
-        let frameDuration = CMTime(value: 1, timescale: 30)
-        for (index, sample) in samples.reversed().enumerated() {
-            guard let pixelBuffer = CMSampleBufferGetImageBuffer(sample) else { continue }
-            let presentationTime = CMTime(value: Int64(index), timescale: 30)
-            while !writerInput.isReadyForMoreMediaData {
-                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+        // Process in chunks to limit memory usage.
+        // Each chunk reads ~30 frames (~1 second), reverses them, writes, then frees.
+        let chunkFrameCount = 30
+        let totalSeconds = CMTimeGetSeconds(duration)
+        let totalFrames = Int(totalSeconds * Double(fps))
+        let chunkDuration = Double(chunkFrameCount) / Double(fps)
+
+        var outputFrameIndex: Int64 = 0
+        var chunkStartSec = totalSeconds  // Start from the end
+
+        while chunkStartSec > 0 {
+            // Calculate this chunk's time range (reading backwards)
+            let chunkEnd = chunkStartSec
+            let chunkBegin = max(0, chunkStartSec - chunkDuration)
+            chunkStartSec = chunkBegin
+
+            let startTime = CMTime(seconds: chunkBegin, preferredTimescale: 600)
+            let endTime = CMTime(seconds: chunkEnd, preferredTimescale: 600)
+            let timeRange = CMTimeRange(start: startTime, end: endTime)
+
+            // Read this chunk's frames
+            guard let reader = try? AVAssetReader(asset: asset) else { continue }
+            reader.timeRange = timeRange
+            let readerOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ])
+            readerOutput.alwaysCopiesSampleData = false
+            reader.add(readerOutput)
+            reader.startReading()
+
+            // Collect this chunk's pixel buffers (small batch, ~30 frames)
+            var chunkBuffers: [CVPixelBuffer] = []
+            while let sample = readerOutput.copyNextSampleBuffer() {
+                if let pixelBuffer = CMSampleBufferGetImageBuffer(sample) {
+                    // Must copy because the sample buffer owns the original
+                    CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+                    var copiedBuffer: CVPixelBuffer?
+                    CVPixelBufferCreate(
+                        kCFAllocatorDefault,
+                        CVPixelBufferGetWidth(pixelBuffer),
+                        CVPixelBufferGetHeight(pixelBuffer),
+                        CVPixelBufferGetPixelFormatType(pixelBuffer),
+                        nil,
+                        &copiedBuffer
+                    )
+                    if let dest = copiedBuffer {
+                        CVPixelBufferLockBaseAddress(dest, [])
+                        let srcData = CVPixelBufferGetBaseAddress(pixelBuffer)!
+                        let dstData = CVPixelBufferGetBaseAddress(dest)!
+                        let dataSize = CVPixelBufferGetDataSize(pixelBuffer)
+                        memcpy(dstData, srcData, dataSize)
+                        CVPixelBufferUnlockBaseAddress(dest, [])
+                        chunkBuffers.append(dest)
+                    }
+                    CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+                }
             }
-            adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
+            reader.cancelReading()
+
+            // Write this chunk's frames in reverse order
+            for pixelBuffer in chunkBuffers.reversed() {
+                let presentationTime = CMTime(value: outputFrameIndex, timescale: Int32(fps))
+                while !writerInput.isReadyForMoreMediaData {
+                    try? await Task.sleep(nanoseconds: 10_000_000)
+                }
+                adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
+                outputFrameIndex += 1
+            }
+
+            // Release this chunk's memory before processing the next
+            chunkBuffers.removeAll()
+
+            // Yield to prevent blocking
+            try? await Task.sleep(nanoseconds: 1_000_000)
         }
 
         writerInput.markAsFinished()
