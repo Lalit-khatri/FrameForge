@@ -986,15 +986,37 @@ final class EditorViewModel {
     func addFreezeFrame() {
         guard let clip = selectedClip else { return }
         saveState()
-        var freezeClip = TimelineClip(assetURL: clip.assetURL, startTime: clip.endTime, duration: 2.0, originalDuration: 2.0)
-        freezeClip.trimStart = currentTime - clip.startTime
-        freezeClip.trimEnd = clip.duration - (currentTime - clip.startTime) - 0.03
-        freezeClip.speed = 0.001
+
+        // Calculate the source time within the original asset for the current playhead
+        let clipRelativeTime = currentTime - clip.startTime
+        let sourceTime = clip.trimStart + max(0, clipRelativeTime) * Double(clip.speed)
+
+        // Create a freeze clip: a tiny slice (1 frame) played at extreme slow-mo
+        let freezeDuration: Double = 3.0  // how long the freeze shows on timeline
+        let oneFrame: Double = 1.0 / 30.0  // ~33ms, a single frame
+
+        var freezeClip = TimelineClip(
+            assetURL: clip.assetURL,
+            startTime: clip.endTime,
+            duration: oneFrame,
+            originalDuration: oneFrame
+        )
+        freezeClip.trimStart = sourceTime
+        freezeClip.trimEnd = 0
+        // Speed = actual_duration / desired_duration ⇒ oneFrame / freezeDuration
+        freezeClip.speed = Float(oneFrame / freezeDuration)
+
         if let trackIdx = tracks.firstIndex(where: { $0.type == .video }) {
-            tracks[trackIdx].clips.append(freezeClip)
+            // Insert freeze clip right after the current clip
+            if let clipIdx = tracks[trackIdx].clips.firstIndex(where: { $0.id == clip.id }) {
+                tracks[trackIdx].clips.insert(freezeClip, at: clipIdx + 1)
+            } else {
+                tracks[trackIdx].clips.append(freezeClip)
+            }
             recalculateStartTimes()
+            saveProject()
             Task { await rebuildComposition() }
-            showToast(icon: "pause.rectangle", text: "Freeze frame added")
+            showToast(icon: "pause.rectangle", text: "Freeze frame added (3s)")
         }
     }
 
