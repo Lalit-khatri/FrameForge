@@ -130,6 +130,7 @@ struct MaskingView: View {
         effect.parameters["effect"] = Double(MaskEffect.allCases.firstIndex(of: maskEffect) ?? 0)
         effect.parameters["inverted"] = invertMask ? 1.0 : 0.0
         viewModel.tracks[ti].clips[ci].effects.append(effect)
+        viewModel.saveProject()
         Task { await viewModel.rebuildComposition() }
         HapticManager.shared.success()
     }

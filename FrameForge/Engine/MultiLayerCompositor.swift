@@ -779,9 +779,77 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
                 ])
 
             case .mask:
-                let radius = intensity * 20.0
-                result = result.applyingFilter("CIGaussianBlur", parameters: [
-                    kCIInputRadiusKey: radius
+                let shapeIdx = Int(effect.parameters["shape"] ?? 0)
+                let effectIdx = Int(effect.parameters["effect"] ?? 0)
+                let inverted = (effect.parameters["inverted"] ?? 0) == 1.0
+                let feather = intensity * 50.0
+
+                // Create mask shape image (white = masked area)
+                var maskImage: CIImage
+                let insetFactor: CGFloat = 0.15
+                let innerRect = extent.insetBy(dx: extent.width * insetFactor, dy: extent.height * insetFactor)
+
+                switch shapeIdx {
+                case 1: // Circle
+                    let radialGrad = CIFilter(name: "CIRadialGradient")!
+                    let center = CIVector(x: extent.midX, y: extent.midY)
+                    let innerRadius = min(innerRect.width, innerRect.height) / 2
+                    radialGrad.setValue(center, forKey: "inputCenter")
+                    radialGrad.setValue(innerRadius, forKey: "inputRadius0")
+                    radialGrad.setValue(innerRadius + feather, forKey: "inputRadius1")
+                    radialGrad.setValue(CIColor.white, forKey: "inputColor0")
+                    radialGrad.setValue(CIColor.clear, forKey: "inputColor1")
+                    maskImage = (radialGrad.outputImage ?? CIImage(color: .white).cropped(to: extent)).cropped(to: extent)
+                case 3: // Linear gradient
+                    let linearGrad = CIFilter(name: "CILinearGradient")!
+                    linearGrad.setValue(CIVector(x: extent.midX, y: extent.minY + feather), forKey: "inputPoint0")
+                    linearGrad.setValue(CIVector(x: extent.midX, y: extent.maxY - feather), forKey: "inputPoint1")
+                    linearGrad.setValue(CIColor.white, forKey: "inputColor0")
+                    linearGrad.setValue(CIColor.clear, forKey: "inputColor1")
+                    maskImage = (linearGrad.outputImage ?? CIImage(color: .white).cropped(to: extent)).cropped(to: extent)
+                default: // Rectangle (0) and freehand (2, fallback to rect)
+                    let white = CIImage(color: .white).cropped(to: innerRect)
+                    maskImage = white
+                    if feather > 0 {
+                        maskImage = maskImage.applyingFilter("CIGaussianBlur", parameters: [
+                            kCIInputRadiusKey: feather
+                        ]).cropped(to: extent)
+                    }
+                    // Pad to full extent
+                    let bg = CIImage(color: .clear).cropped(to: extent)
+                    maskImage = maskImage.composited(over: bg).cropped(to: extent)
+                }
+
+                if inverted {
+                    // Invert the mask by subtracting from white
+                    let white = CIImage(color: .white).cropped(to: extent)
+                    maskImage = white.applyingFilter("CISubtractBlendMode", parameters: [
+                        kCIInputBackgroundImageKey: maskImage
+                    ]).cropped(to: extent)
+                }
+
+                // Create effect layer
+                var effectLayer: CIImage
+                switch effectIdx {
+                case 0: // Blur
+                    effectLayer = result.applyingFilter("CIGaussianBlur", parameters: [
+                        kCIInputRadiusKey: CGFloat(20.0)
+                    ]).cropped(to: extent)
+                case 1: // Color fill
+                    effectLayer = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.8)).cropped(to: extent)
+                case 2: // Mosaic
+                    effectLayer = result.applyingFilter("CIPixellate", parameters: [
+                        kCIInputScaleKey: CGFloat(20.0),
+                        "inputCenter": CIVector(x: extent.midX, y: extent.midY)
+                    ]).cropped(to: extent)
+                default: // None - transparent
+                    effectLayer = CIImage(color: .clear).cropped(to: extent)
+                }
+
+                // Blend: where mask is white, show effectLayer; where mask is black, show original
+                result = result.applyingFilter("CIBlendWithMask", parameters: [
+                    kCIInputBackgroundImageKey: effectLayer,
+                    kCIInputMaskImageKey: maskImage
                 ]).cropped(to: extent)
             }
         }
