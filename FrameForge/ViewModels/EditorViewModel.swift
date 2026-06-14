@@ -704,6 +704,7 @@ final class EditorViewModel {
                 tracks[i].clips[j].volume = volume
             }
         }
+        saveProject()
         Task { await rebuildComposition() }
     }
 

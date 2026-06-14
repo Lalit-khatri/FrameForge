@@ -13,6 +13,9 @@ struct AudioMixerView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
+                        if viewModel.selectedClipID != nil {
+                            selectedClipVolumeSection
+                        }
                         masterVolumeSection
                         trackVolumes
                         addMusicSection
@@ -53,6 +56,50 @@ struct AudioMixerView: View {
                 print("Audio import error: \(error)")
             }
         }
+    }
+
+    private var selectedClipVolumeSection: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Image(systemName: "waveform")
+                    .foregroundColor(Color(red: 0.99, green: 0.32, blue: 0.56))
+                Text("Selected Clip Volume")
+                    .font(.subheadline.bold())
+                    .foregroundColor(.white)
+                Spacer()
+                if let clip = viewModel.selectedClip {
+                    Text("\(Int(clip.volume * 100))%")
+                        .font(.caption.bold())
+                        .foregroundColor(Color(red: 0.99, green: 0.32, blue: 0.56))
+                }
+            }
+            if let clipID = viewModel.selectedClipID, let clip = viewModel.selectedClip {
+                Slider(value: Binding(
+                    get: { clip.volume },
+                    set: { viewModel.setVolume(Float($0), forClip: clipID) }
+                ), in: 0...2.0)
+                    .tint(Color(red: 0.99, green: 0.32, blue: 0.56))
+
+                Button(action: {
+                    viewModel.toggleClipMute(clipID: clipID)
+                    HapticManager.shared.selection()
+                }) {
+                    HStack {
+                        Image(systemName: clip.isMuted ? "speaker.slash.fill" : "speaker.fill")
+                        Text(clip.isMuted ? "Unmute Clip" : "Mute Clip")
+                            .font(.caption.bold())
+                    }
+                    .foregroundColor(clip.isMuted ? .red : .gray)
+                }
+            }
+        }
+        .padding()
+        .background(Color(red: 0.99, green: 0.32, blue: 0.56).opacity(0.1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(red: 0.99, green: 0.32, blue: 0.56).opacity(0.3), lineWidth: 1)
+        )
+        .cornerRadius(16)
     }
 
     private var masterVolumeSection: some View {
