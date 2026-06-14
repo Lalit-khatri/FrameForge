@@ -69,9 +69,13 @@ struct SpeedControlView: View {
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .onAppear {
-            // Pre-fill current clip speed
+            // Pre-fill current clip speed and curve
             if let clip = viewModel.selectedClip {
                 speed = clip.speed
+                if let curve = clip.speedCurve {
+                    useSpeedCurve = true
+                    curvePoints = curve.controlPoints
+                }
             }
         }
     }
