@@ -629,6 +629,7 @@ final class EditorViewModel {
                 }
             }
         }
+        saveProject()
         Task { await rebuildComposition() }
         HapticManager.shared.selection()
     }
@@ -639,6 +640,7 @@ final class EditorViewModel {
                 tracks[i].clips[j].effects.removeAll { $0.type == effectType }
             }
         }
+        saveProject()
         Task { await rebuildComposition() }
     }
 
@@ -650,6 +652,7 @@ final class EditorViewModel {
                 }
             }
         }
+        saveProject()
         Task { await rebuildComposition() }
     }
 
