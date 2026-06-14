@@ -80,7 +80,7 @@ private struct VideoAdSlotView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(adLoaded: $adLoaded) }
 
     func makeUIView(context: Context) -> BannerView {
-        let banner = BannerView(adSize: GADAdSizeMediumRectangle)
+        let banner = BannerView(adSize: AdSizeMediumRectangle)
         banner.adUnitID = adUnitID
         banner.delegate = context.coordinator
         banner.backgroundColor = .clear
