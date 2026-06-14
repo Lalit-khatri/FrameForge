@@ -12,7 +12,7 @@ struct OnboardingView: View {
          [Color(red: 0.42, green: 0.36, blue: 0.91), Color(red: 0.99, green: 0.32, blue: 0.56)]),
 
         ("wand.and.stars", "Powerful\nEffects",
-         "Keyframe animation, motion tracking, 3D text, LUT color grading, chroma key, and 16+ real-time effects.",
+         "Keyframe animation, motion tracking, LUT color grading, chroma key, and 16+ real-time effects.",
          [Color(red: 0.99, green: 0.32, blue: 0.56), .orange]),
 
         ("sparkles", "AI-Powered\nCaptions",

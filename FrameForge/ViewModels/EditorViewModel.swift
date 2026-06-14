@@ -27,7 +27,6 @@ final class EditorViewModel {
     var showKeyframeEditor = false
     var showMotionTracking = false
     var showLUTImport = false
-    var show3DText = false
     var currentLUT: LUTData?
     var showCloudBackup = false
     var showShareView = false

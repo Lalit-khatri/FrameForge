@@ -57,9 +57,7 @@ struct ToolbarView: View {
         .sheet(isPresented: $viewModel.showLUTImport) {
             LUTImportView(viewModel: viewModel)
         }
-        .sheet(isPresented: $viewModel.show3DText) {
-            Text3DView(viewModel: viewModel)
-        }
+
         .sheet(isPresented: $viewModel.showCloudBackup) {
             CloudBackupView(viewModel: viewModel)
         }
@@ -131,18 +129,6 @@ struct ToolbarView: View {
                 toolButton("Effects", icon: "sparkles", color: .white) {
                     viewModel.showEffectsPanel = true
                 }
-                toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
-                    viewModel.showBackgroundRemoval = true
-                }
-                toolButton("Keyframe", icon: "diamond", color: .white) {
-                    viewModel.showKeyframeEditor = true
-                }
-                toolButton("Track", icon: "scope", color: .white) {
-                    viewModel.showMotionTracking = true
-                }
-                toolButton("3D Text", icon: "cube", color: .white) {
-                    viewModel.show3DText = true
-                }
                 toolButton("LUT", icon: "paintpalette", color: .white) {
                     viewModel.showLUTImport = true
                 }
@@ -163,12 +149,6 @@ struct ToolbarView: View {
                 }
                 toolButton("Voiceover", icon: "mic.fill", color: .white) {
                     viewModel.showVoiceover = true
-                }
-                toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
-                    viewModel.showChromaKey = true
-                }
-                toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
-                    viewModel.showCurveSpeed = true
                 }
                 toolButton("Aspect", icon: "aspectratio", color: .white) {
                     viewModel.showAspectRatio = true
@@ -233,6 +213,21 @@ struct ToolbarView: View {
                 }
                 toolButton("Delete", icon: "trash", color: .red) {
                     showDeleteClipAlert = true
+                }
+                toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
+                    viewModel.showBackgroundRemoval = true
+                }
+                toolButton("Keyframe", icon: "diamond", color: .white) {
+                    viewModel.showKeyframeEditor = true
+                }
+                toolButton("Track", icon: "scope", color: .white) {
+                    viewModel.showMotionTracking = true
+                }
+                toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
+                    viewModel.showChromaKey = true
+                }
+                toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
+                    viewModel.showCurveSpeed = true
                 }
                 toolButton("Deselect", icon: "xmark.circle", color: .gray) {
                     viewModel.selectedClipID = nil
