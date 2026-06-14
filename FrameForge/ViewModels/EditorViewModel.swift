@@ -584,7 +584,9 @@ final class EditorViewModel {
             var currentStart: Double = 0
             for j in 0..<tracks[i].clips.count {
                 tracks[i].clips[j].startTime = currentStart
-                currentStart = tracks[i].clips[j].endTime
+                // Guard against negative effectiveDuration causing overlapping clips
+                let endTime = tracks[i].clips[j].endTime
+                currentStart = max(currentStart, endTime)
             }
         }
 
@@ -991,20 +993,29 @@ final class EditorViewModel {
         let clipRelativeTime = currentTime - clip.startTime
         let sourceTime = clip.trimStart + max(0, clipRelativeTime) * Double(clip.speed)
 
-        // Create a freeze clip: a tiny slice (1 frame) played at extreme slow-mo
+        // Freeze frame: extract one frame from the source asset and slow it down
         let freezeDuration: Double = 3.0  // how long the freeze shows on timeline
-        let oneFrame: Double = 1.0 / 30.0  // ~33ms, a single frame
+        let oneFrame: Double = 1.0 / 30.0  // ~33ms
+
+        // The clip's `duration` field must contain the full source range being used.
+        // trimStart selects the starting frame in the source asset.
+        // duration = trimStart + oneFrame so the usable range is exactly one frame.
+        // trimEnd = 0 (nothing trimmed from end).
+        // effectiveDuration = (duration - trimStart - trimEnd) / speed
+        //                   = (sourceTime + oneFrame - sourceTime - 0) / speed
+        //                   = oneFrame / speed = freezeDuration ✓
+        let clipDuration = sourceTime + oneFrame
+        let freezeSpeed = Float(oneFrame / freezeDuration)
 
         var freezeClip = TimelineClip(
             assetURL: clip.assetURL,
             startTime: clip.endTime,
-            duration: oneFrame,
-            originalDuration: oneFrame
+            duration: clipDuration,
+            originalDuration: clipDuration
         )
         freezeClip.trimStart = sourceTime
         freezeClip.trimEnd = 0
-        // Speed = actual_duration / desired_duration ⇒ oneFrame / freezeDuration
-        freezeClip.speed = Float(oneFrame / freezeDuration)
+        freezeClip.speed = freezeSpeed
 
         if let trackIdx = tracks.firstIndex(where: { $0.type == .video }) {
             // Insert freeze clip right after the current clip
