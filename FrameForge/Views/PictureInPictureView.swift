@@ -45,7 +45,7 @@ struct PictureInPictureView: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .onAppear {
             if let clip = viewModel.selectedClip {
@@ -173,15 +173,15 @@ struct PictureInPictureView: View {
     private func pipOffset(w: CGFloat, h: CGFloat, pipW: CGFloat, pipH: CGFloat) -> CGPoint {
         let padding: CGFloat = 8
         switch pipPosition {
-        case .topLeft: return CGPoint(x: -(w - pipW) / 2 + padding, y: -(h - pipH) / 2 + padding)
-        case .topCenter: return CGPoint(x: 0, y: -(h - pipH) / 2 + padding)
-        case .topRight: return CGPoint(x: (w - pipW) / 2 - padding, y: -(h - pipH) / 2 + padding)
-        case .centerLeft: return CGPoint(x: -(w - pipW) / 2 + padding, y: 0)
-        case .center: return .zero
-        case .centerRight: return CGPoint(x: (w - pipW) / 2 - padding, y: 0)
-        case .bottomLeft: return CGPoint(x: -(w - pipW) / 2 + padding, y: (h - pipH) / 2 - padding)
-        case .bottomCenter: return CGPoint(x: 0, y: (h - pipH) / 2 - padding)
-        case .bottomRight: return CGPoint(x: (w - pipW) / 2 - padding, y: (h - pipH) / 2 - padding)
+        case .topLeft: return  .zero
+        case .topCenter: return CGPoint(x: (w - pipW) / 2 + padding, y: 0)
+        case .topRight: return CGPoint(x: (w - pipW) - padding, y: 0)
+        case .centerLeft: return CGPoint(x: 0, y: (h - pipH) / 2 + padding)
+        case .center: return  CGPoint(x: (w - pipW) / 2 + padding, y: (h - pipH) / 2 + padding)
+        case .centerRight: return CGPoint(x: (w - pipW) - padding, y: (h - pipH) / 2 + padding)
+        case .bottomLeft: return CGPoint(x: 0, y: (h - pipH) - padding)
+        case .bottomCenter: return CGPoint(x: (w - pipW)/2 + padding, y: (h - pipH) - padding)
+        case .bottomRight: return CGPoint(x: (w - pipW)  - padding, y: (h - pipH) - padding)
         }
     }
 
@@ -208,7 +208,6 @@ struct PictureInPictureView: View {
         } else {
             let overlayTrack = TimelineTrack(
                 type: .overlay,
-                name: "PiP",
                 clips: [],
                 transform: nil
             )
