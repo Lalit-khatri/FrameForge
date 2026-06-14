@@ -1173,6 +1173,9 @@ final class EditorViewModel {
                 break
             }
         }
+        // Reset the global cropRect so it doesn't leak as a fallback
+        // to other clips. Per-clip crops are handled via cropSegments.
+        cropRect = CGRect(x: 0, y: 0, width: 1, height: 1)
         saveProject()
         Task { await rebuildComposition() }
         showCropTool = false
@@ -1324,7 +1327,10 @@ final class EditorViewModel {
                 isPlaying = false
             }
 
-            let (comp, videoComp, audioMix) = try await compositionEngine.buildComposition(from: tracks, renderSize: canvasRenderSize, cropRect: cropRect, masterVolume: masterVolume)
+            // Always pass full-frame as the global crop. Per-clip crops are
+            // handled entirely via cropSegments built from clip.cropRect.
+            let fullFrame = CGRect(x: 0, y: 0, width: 1, height: 1)
+            let (comp, videoComp, audioMix) = try await compositionEngine.buildComposition(from: tracks, renderSize: canvasRenderSize, cropRect: fullFrame, masterVolume: masterVolume)
             let duration = compositionEngine.getTotalDuration(for: tracks)
 
             try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
