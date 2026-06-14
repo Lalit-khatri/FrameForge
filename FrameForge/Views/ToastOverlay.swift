@@ -53,14 +53,19 @@ struct ToastOverlay: View {
     }
 
     private func scheduleDismiss() {
-        // Cancel any pending dismiss from a previous toast
+        // Capture the ID of the toast we're dismissing
+        guard let currentID = message?.id else { return }
         dismissTask?.cancel()
         dismissTask = Task {
             try? await Task.sleep(nanoseconds: 2_500_000_000)  // 2.5s
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                withAnimation(.easeOut(duration: 0.3)) {
-                    message = nil
+                // Only dismiss if the current message is still the one we scheduled for.
+                // This prevents an old timer from killing a newer toast.
+                if message?.id == currentID {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        message = nil
+                    }
                 }
             }
         }
