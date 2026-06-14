@@ -225,6 +225,25 @@ struct PictureInPictureView: View {
         )
 
         viewModel.tracks[overlayIdx].clips.append(clip)
+
+        // Trim PiP clip so it doesn't extend beyond the main video.
+        // Calculate the main video track's total duration and clamp the PiP clip.
+        let mainVideoDuration = viewModel.tracks
+            .filter { $0.type == .video }
+            .flatMap { $0.clips }
+            .reduce(0.0) { $0 + $1.effectiveDuration }
+
+        if mainVideoDuration > 0 {
+            let lastIdx = viewModel.tracks[overlayIdx].clips.count - 1
+            let pipClip = viewModel.tracks[overlayIdx].clips[lastIdx]
+            let pipEffective = pipClip.effectiveDuration
+            if pipEffective > mainVideoDuration {
+                // Add trimEnd to shorten the pip clip to match main video
+                let excessSource = (pipEffective - mainVideoDuration) * Double(pipClip.speed)
+                viewModel.tracks[overlayIdx].clips[lastIdx].trimEnd += excessSource
+            }
+        }
+
         viewModel.recalculateStartTimes()
         viewModel.saveProject()
         Task { await viewModel.rebuildComposition() }
