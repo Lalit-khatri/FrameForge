@@ -47,6 +47,17 @@ struct PictureInPictureView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .onAppear {
+            if let clip = viewModel.selectedClip {
+                if let pos = clip.pipPosition,
+                   let pipPos = PiPPosition(rawValue: pos) {
+                    pipPosition = pipPos
+                }
+                if let scale = clip.pipScale {
+                    pipScale = CGFloat(scale)
+                }
+            }
+        }
     }
 
     private var pipPreview: some View {
@@ -177,8 +188,47 @@ struct PictureInPictureView: View {
     private func applyPiP() {
         guard let clipID = viewModel.selectedClipID else { return }
         guard let (ti, ci) = viewModel.findClipIndices(clipID) else { return }
+
+        // Save PiP metadata on the clip
         viewModel.tracks[ti].clips[ci].pipPosition = pipPosition.rawValue
         viewModel.tracks[ti].clips[ci].pipScale = Float(pipScale)
+
+        let clip = viewModel.tracks[ti].clips[ci]
+
+        // Remove clip from its current track
+        viewModel.tracks[ti].clips.remove(at: ci)
+        if viewModel.tracks[ti].clips.isEmpty && viewModel.tracks[ti].type == .video {
+            // Don't remove the primary video track even if empty
+        }
+
+        // Find or create an overlay track
+        let overlayIdx: Int
+        if let existing = viewModel.tracks.firstIndex(where: { $0.type == .overlay }) {
+            overlayIdx = existing
+        } else {
+            let overlayTrack = TimelineTrack(
+                type: .overlay,
+                name: "PiP",
+                clips: [],
+                transform: nil
+            )
+            viewModel.tracks.append(overlayTrack)
+            overlayIdx = viewModel.tracks.count - 1
+        }
+
+        // Set the transform for the overlay track based on PiP position/scale
+        let transformPos = pipPosition.transformPosition
+        viewModel.tracks[overlayIdx].transform = VideoTrackTransform(
+            position: transformPos,
+            scale: pipScale,
+            rotation: 0,
+            zIndex: 10
+        )
+
+        viewModel.tracks[overlayIdx].clips.append(clip)
+        viewModel.recalculateStartTimes()
+        viewModel.saveProject()
+        Task { await viewModel.rebuildComposition() }
         HapticManager.shared.success()
     }
 }
@@ -199,6 +249,21 @@ enum PiPPosition: String, CaseIterable {
         case .bottomLeft: return "↙ BL"
         case .bottomCenter: return "↓ BC"
         case .bottomRight: return "↘ BR"
+        }
+    }
+
+    /// Maps position to normalized coordinates for VideoTrackTransform
+    var transformPosition: CGPoint {
+        switch self {
+        case .topLeft:      return CGPoint(x: 0.2, y: 0.2)
+        case .topCenter:    return CGPoint(x: 0.5, y: 0.2)
+        case .topRight:     return CGPoint(x: 0.8, y: 0.2)
+        case .centerLeft:   return CGPoint(x: 0.2, y: 0.5)
+        case .center:       return CGPoint(x: 0.5, y: 0.5)
+        case .centerRight:  return CGPoint(x: 0.8, y: 0.5)
+        case .bottomLeft:   return CGPoint(x: 0.2, y: 0.8)
+        case .bottomCenter: return CGPoint(x: 0.5, y: 0.8)
+        case .bottomRight:  return CGPoint(x: 0.8, y: 0.8)
         }
     }
 }
