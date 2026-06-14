@@ -227,6 +227,51 @@ final class CompositionEngine: Sendable {
                 segmentTime = CMTimeAdd(segmentTime, clipDuration)
             }
         }
+        // Build per-clip filter segments from the video tracks.
+        var filterSegments: [FilterSegment] = []
+        for track in tracks where track.type == .video || track.type == .overlay {
+            var segmentTime = CMTime.zero
+            for clip in track.clips {
+                let clipDuration = CMTime(seconds: clip.effectiveDuration, preferredTimescale: 600)
+
+                var brightness: Float = 0, contrast: Float = 0, saturation: Float = 0
+                var temperature: Float = 0, sharpness: Float = 0, vignette: Float = 0, fade: Float = 0
+                var hasFilter = false
+
+                // Apply filter preset values
+                if let filterID = clip.filterID, filterID != "original",
+                   let preset = VideoFilter.presets.first(where: { $0.id == filterID }) {
+                    brightness = preset.brightness
+                    contrast = preset.contrast
+                    saturation = preset.saturation
+                    temperature = preset.temperature
+                    sharpness = preset.sharpness
+                    vignette = preset.vignette
+                    fade = preset.fade
+                    hasFilter = true
+                }
+
+                // Override with manual color adjustments if present
+                if let adj = clip.colorAdjustments {
+                    brightness = adj.brightness
+                    contrast = adj.contrast
+                    saturation = adj.saturation
+                    temperature = adj.temperature
+                    sharpness = adj.sharpness
+                    vignette = adj.vignette
+                    hasFilter = true
+                }
+
+                if hasFilter {
+                    filterSegments.append(FilterSegment(
+                        timeRange: CMTimeRange(start: segmentTime, duration: clipDuration),
+                        brightness: brightness, contrast: contrast, saturation: saturation,
+                        temperature: temperature, sharpness: sharpness, vignette: vignette, fade: fade
+                    ))
+                }
+                segmentTime = CMTimeAdd(segmentTime, clipDuration)
+            }
+        }
 
         let videoComp = buildMultiLayerVideoComposition(
             comp: comp,
@@ -234,6 +279,7 @@ final class CompositionEngine: Sendable {
             layerMappings: videoLayerMappings,
             cropRect: cropRect,
             cropSegments: cropSegments,
+            filterSegments: filterSegments,
             transitions: transitionInfos,
             tracks: tracks,
             stickerOverlays: stickers
@@ -255,6 +301,7 @@ final class CompositionEngine: Sendable {
         layerMappings: [(trackID: CMPersistentTrackID, transform: VideoTrackTransform, opacity: Float, effects: [ClipEffect])],
         cropRect: CGRect,
         cropSegments: [CropSegment] = [],
+        filterSegments: [FilterSegment] = [],
         transitions: [TransitionInfo] = [],
         tracks: [TimelineTrack] = [],
         stickerOverlays: [OverlayStickerInfo] = []
@@ -294,6 +341,7 @@ final class CompositionEngine: Sendable {
             layerEffects: effects,
             cropRect: cropRect,
             cropSegments: cropSegments,
+            filterSegments: filterSegments,
             renderSize: renderSize,
             transitions: transitions,
             textOverlays: textOverlays,

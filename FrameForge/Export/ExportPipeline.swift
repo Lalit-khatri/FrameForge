@@ -54,6 +54,7 @@ final class ExportPipeline {
                     layerEffects: multiInstruction.layerEffects,
                     cropRect: multiInstruction.cropRect,
                     cropSegments: multiInstruction.cropSegments,
+                    filterSegments: multiInstruction.filterSegments,
                     renderSize: exportSize,
                     transitions: multiInstruction.transitions,
                     textOverlays: multiInstruction.textOverlays,

@@ -71,6 +71,18 @@ struct CropSegment {
     let cropRect: CGRect
 }
 
+/// A color filter/adjustment that applies during a specific time range.
+struct FilterSegment {
+    let timeRange: CMTimeRange
+    let brightness: Float
+    let contrast: Float
+    let saturation: Float
+    let temperature: Float
+    let sharpness: Float
+    let vignette: Float
+    let fade: Float
+}
+
 final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstructionProtocol {
     let timeRange: CMTimeRange
     let enablePostProcessing: Bool = false
@@ -84,6 +96,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
     let layerEffects: [CMPersistentTrackID: [ClipEffect]]
     let cropRect: CGRect
     let cropSegments: [CropSegment]
+    let filterSegments: [FilterSegment]
     let renderSize: CGSize
     let transitions: [TransitionInfo]
     let textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)]
@@ -98,6 +111,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         layerEffects: [CMPersistentTrackID: [ClipEffect]] = [:],
         cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1),
         cropSegments: [CropSegment] = [],
+        filterSegments: [FilterSegment] = [],
         renderSize: CGSize,
         transitions: [TransitionInfo] = [],
         textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)] = [],
@@ -110,6 +124,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         self.layerEffects = layerEffects
         self.cropRect = cropRect
         self.cropSegments = cropSegments
+        self.filterSegments = filterSegments
         self.renderSize = renderSize
         self.transitions = transitions
         self.textOverlays = textOverlays
@@ -354,6 +369,55 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
 
                 stickerImage = stickerImage.cropped(to: extent)
                 composited = stickerImage.composited(over: composited)
+            }
+        }
+        // Apply per-clip color filter/adjustments at the current time.
+        if let filterSeg = instruction.filterSegments.first(where: { $0.timeRange.containsTime(currentTime) }) {
+            if filterSeg.brightness != 0 || filterSeg.contrast != 0 || filterSeg.saturation != 0 {
+                if let colorControls = CIFilter(name: "CIColorControls") {
+                    colorControls.setValue(composited, forKey: kCIInputImageKey)
+                    colorControls.setValue(filterSeg.brightness, forKey: kCIInputBrightnessKey)
+                    colorControls.setValue(1.0 + filterSeg.contrast, forKey: kCIInputContrastKey)
+                    colorControls.setValue(1.0 + filterSeg.saturation, forKey: kCIInputSaturationKey)
+                    if let output = colorControls.outputImage {
+                        composited = output
+                    }
+                }
+            }
+            if filterSeg.temperature != 0 {
+                if let tempFilter = CIFilter(name: "CITemperatureAndTint") {
+                    tempFilter.setValue(composited, forKey: kCIInputImageKey)
+                    let neutral = CIVector(x: 6500 + CGFloat(filterSeg.temperature * 3000), y: 0)
+                    tempFilter.setValue(neutral, forKey: "inputNeutral")
+                    tempFilter.setValue(CIVector(x: 6500, y: 0), forKey: "inputTargetNeutral")
+                    if let output = tempFilter.outputImage {
+                        composited = output
+                    }
+                }
+            }
+            if filterSeg.sharpness != 0 {
+                if let sharp = CIFilter(name: "CISharpenLuminance") {
+                    sharp.setValue(composited, forKey: kCIInputImageKey)
+                    sharp.setValue(filterSeg.sharpness * 2.0, forKey: kCIInputSharpnessKey)
+                    if let output = sharp.outputImage {
+                        composited = output
+                    }
+                }
+            }
+            if filterSeg.vignette != 0 {
+                if let vig = CIFilter(name: "CIVignette") {
+                    vig.setValue(composited, forKey: kCIInputImageKey)
+                    vig.setValue(filterSeg.vignette * 3.0, forKey: kCIInputIntensityKey)
+                    vig.setValue(filterSeg.vignette * 2.0, forKey: kCIInputRadiusKey)
+                    if let output = vig.outputImage {
+                        composited = output
+                    }
+                }
+            }
+            if filterSeg.fade > 0 {
+                let overlay = CIImage(color: CIColor(red: 1, green: 1, blue: 1, alpha: CGFloat(filterSeg.fade * 0.4)))
+                    .cropped(to: extent)
+                composited = overlay.composited(over: composited)
             }
         }
 
