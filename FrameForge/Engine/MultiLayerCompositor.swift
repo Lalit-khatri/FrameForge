@@ -65,6 +65,12 @@ struct TransitionInfo {
     let toTrackID: CMPersistentTrackID
 }
 
+/// A crop region that applies during a specific time range.
+struct CropSegment {
+    let timeRange: CMTimeRange
+    let cropRect: CGRect
+}
+
 final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstructionProtocol {
     let timeRange: CMTimeRange
     let enablePostProcessing: Bool = false
@@ -77,6 +83,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
     let layerOpacities: [CMPersistentTrackID: Float]
     let layerEffects: [CMPersistentTrackID: [ClipEffect]]
     let cropRect: CGRect
+    let cropSegments: [CropSegment]
     let renderSize: CGSize
     let transitions: [TransitionInfo]
     let textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)]
@@ -90,6 +97,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         layerOpacities: [CMPersistentTrackID: Float] = [:],
         layerEffects: [CMPersistentTrackID: [ClipEffect]] = [:],
         cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1),
+        cropSegments: [CropSegment] = [],
         renderSize: CGSize,
         transitions: [TransitionInfo] = [],
         textOverlays: [(text: TextOverlayData, startTime: Double, endTime: Double)] = [],
@@ -101,6 +109,7 @@ final class MultiLayerCompositionInstruction: NSObject, AVVideoCompositionInstru
         self.layerOpacities = layerOpacities
         self.layerEffects = layerEffects
         self.cropRect = cropRect
+        self.cropSegments = cropSegments
         self.renderSize = renderSize
         self.transitions = transitions
         self.textOverlays = textOverlays
@@ -348,9 +357,18 @@ final class MultiLayerVideoCompositor: NSObject, AVVideoCompositing {
             }
         }
 
-        let isCropped = instruction.cropRect != CGRect(x: 0, y: 0, width: 1, height: 1)
+        // Determine which crop to apply at the current time.
+        // Per-clip crop segments take priority over the legacy global cropRect.
+        let activeCrop: CGRect
+        if let segment = instruction.cropSegments.first(where: { $0.timeRange.containsTime(currentTime) }) {
+            activeCrop = segment.cropRect
+        } else {
+            activeCrop = instruction.cropRect
+        }
+
+        let isCropped = activeCrop != CGRect(x: 0, y: 0, width: 1, height: 1)
         if isCropped {
-            let cr = instruction.cropRect
+            let cr = activeCrop
             let cropX = cr.origin.x * renderSize.width
             let cropY = (1 - cr.origin.y - cr.height) * renderSize.height
             let cropW = cr.width * renderSize.width

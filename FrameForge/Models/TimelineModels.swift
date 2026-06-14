@@ -70,6 +70,7 @@ struct TimelineClip: Identifiable, Codable {
     var pipScale: Float?
     var isReversed: Bool = false
     var speedCurve: SpeedCurveData?
+    var cropRect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)
 
     var effectiveDuration: Double {
         (duration - trimStart - trimEnd) / Double(speed)

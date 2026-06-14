@@ -1104,7 +1104,15 @@ final class EditorViewModel {
 
     // MARK: - Crop
 
-    func applyCrop() {
+    func applyCropToSelectedClip() {
+        guard let clipID = selectedClipID else { return }
+        for trackIdx in tracks.indices {
+            if let clipIdx = tracks[trackIdx].clips.firstIndex(where: { $0.id == clipID }) {
+                tracks[trackIdx].clips[clipIdx].cropRect = cropRect
+                break
+            }
+        }
+        saveProject()
         Task { await rebuildComposition() }
         showCropTool = false
         HapticManager.shared.success()

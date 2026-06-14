@@ -30,7 +30,7 @@ struct CropView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") {
-                        viewModel.applyCrop()
+                        viewModel.applyCropToSelectedClip()
                         dismiss()
                     }
                     .foregroundColor(Color(red: 0.42, green: 0.36, blue: 0.91))
@@ -129,6 +129,9 @@ struct CropView: View {
                     )
             }
             .onAppear {
+                if let clip = viewModel.selectedClip {
+                    viewModel.cropRect = clip.cropRect
+                }
                 if viewModel.cropRect == CGRect(x: 0, y: 0, width: 1, height: 1) {
                     cropFrame = videoRect
                 }

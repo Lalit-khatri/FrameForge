@@ -211,11 +211,29 @@ final class CompositionEngine: Sendable {
             }
         }
 
+        // Build per-clip crop segments from the primary video track.
+        var cropSegments: [CropSegment] = []
+        for track in tracks where track.type == .video {
+            var segmentTime = CMTime.zero
+            for clip in track.clips {
+                let clipDuration = CMTime(seconds: clip.effectiveDuration, preferredTimescale: 600)
+                let fullFrame = CGRect(x: 0, y: 0, width: 1, height: 1)
+                if clip.cropRect != fullFrame {
+                    cropSegments.append(CropSegment(
+                        timeRange: CMTimeRange(start: segmentTime, duration: clipDuration),
+                        cropRect: clip.cropRect
+                    ))
+                }
+                segmentTime = CMTimeAdd(segmentTime, clipDuration)
+            }
+        }
+
         let videoComp = buildMultiLayerVideoComposition(
             comp: comp,
             renderSize: renderSize,
             layerMappings: videoLayerMappings,
             cropRect: cropRect,
+            cropSegments: cropSegments,
             transitions: transitionInfos,
             tracks: tracks,
             stickerOverlays: stickers
@@ -236,6 +254,7 @@ final class CompositionEngine: Sendable {
         renderSize: CGSize,
         layerMappings: [(trackID: CMPersistentTrackID, transform: VideoTrackTransform, opacity: Float, effects: [ClipEffect])],
         cropRect: CGRect,
+        cropSegments: [CropSegment] = [],
         transitions: [TransitionInfo] = [],
         tracks: [TimelineTrack] = [],
         stickerOverlays: [OverlayStickerInfo] = []
@@ -274,6 +293,7 @@ final class CompositionEngine: Sendable {
             layerOpacities: opacities,
             layerEffects: effects,
             cropRect: cropRect,
+            cropSegments: cropSegments,
             renderSize: renderSize,
             transitions: transitions,
             textOverlays: textOverlays,

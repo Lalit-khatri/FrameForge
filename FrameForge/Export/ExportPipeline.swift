@@ -53,6 +53,7 @@ final class ExportPipeline {
                     layerOpacities: multiInstruction.layerOpacities,
                     layerEffects: multiInstruction.layerEffects,
                     cropRect: multiInstruction.cropRect,
+                    cropSegments: multiInstruction.cropSegments,
                     renderSize: exportSize,
                     transitions: multiInstruction.transitions,
                     textOverlays: multiInstruction.textOverlays,
