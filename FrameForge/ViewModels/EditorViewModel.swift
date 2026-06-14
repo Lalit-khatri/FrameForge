@@ -734,9 +734,33 @@ final class EditorViewModel {
         for i in 0..<tracks.count {
             if let j = tracks[i].clips.firstIndex(where: { $0.id == clipID }) {
                 tracks[i].clips[j].isReversed.toggle()
-                Task { await rebuildComposition() }
+                let clip = tracks[i].clips[j]
+
+                if clip.isReversed {
+                    // Create reversed video file
+                    guard let url = clip.assetURL else { return }
+                    showToast(icon: "hourglass", text: "Reversing clip…")
+
+                    Task {
+                        if let reversedURL = await createReversedVideo(from: url) {
+                            tracks[i].clips[j].reversedAssetURL = reversedURL
+                            saveProject()
+                            await rebuildComposition()
+                            showToast(icon: "arrow.uturn.left", text: "Clip reversed")
+                        } else {
+                            tracks[i].clips[j].isReversed = false
+                            showToast(icon: "xmark.circle", text: "Reverse failed")
+                        }
+                    }
+                } else {
+                    // Un-reverse: clear the reversed URL and rebuild
+                    tracks[i].clips[j].reversedAssetURL = nil
+                    saveProject()
+                    Task { await rebuildComposition() }
+                    showToast(icon: "arrow.uturn.left", text: "Reverse removed")
+                }
+
                 HapticManager.shared.medium()
-                showToast(icon: "arrow.uturn.left", text: tracks[i].clips[j].isReversed ? "Clip reversed" : "Reverse removed")
                 return
             }
         }
@@ -1182,6 +1206,76 @@ final class EditorViewModel {
                 self.pause()
             }
         }
+    }
+
+    // MARK: - Video Reversal
+
+    /// Creates a reversed copy of a video file by reading samples in reverse order.
+    private func createReversedVideo(from sourceURL: URL) async -> URL? {
+        let asset = AVURLAsset(url: sourceURL)
+        guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else { return nil }
+
+        let duration = try? await asset.load(.duration)
+        guard let duration = duration else { return nil }
+        let naturalSize = try? await videoTrack.load(.naturalSize)
+        let transform = try? await videoTrack.load(.preferredTransform)
+
+        guard let naturalSize = naturalSize else { return nil }
+        let size = naturalSize.applying(transform ?? .identity)
+        let outputSize = CGSize(width: abs(size.width), height: abs(size.height))
+
+        // Output file
+        let outputURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("reversed_\(UUID().uuidString).mp4")
+        try? FileManager.default.removeItem(at: outputURL)
+
+        // Read all video sample buffers
+        guard let reader = try? AVAssetReader(asset: asset) else { return nil }
+        let readerOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ])
+        readerOutput.alwaysCopiesSampleData = false
+        reader.add(readerOutput)
+        reader.startReading()
+
+        var samples: [CMSampleBuffer] = []
+        while let sample = readerOutput.copyNextSampleBuffer() {
+            samples.append(sample)
+        }
+        reader.cancelReading()
+
+        guard !samples.isEmpty else { return nil }
+
+        // Write samples in reverse
+        guard let writer = try? AVAssetWriter(outputURL: outputURL, fileType: .mp4) else { return nil }
+        let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: outputSize.width,
+            AVVideoHeightKey: outputSize.height
+        ])
+        writerInput.transform = transform ?? .identity
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: writerInput,
+            sourcePixelBufferAttributes: nil
+        )
+        writer.add(writerInput)
+        writer.startWriting()
+        writer.startSession(atSourceTime: .zero)
+
+        let frameDuration = CMTime(value: 1, timescale: 30)
+        for (index, sample) in samples.reversed().enumerated() {
+            guard let pixelBuffer = CMSampleBufferGetImageBuffer(sample) else { continue }
+            let presentationTime = CMTime(value: Int64(index), timescale: 30)
+            while !writerInput.isReadyForMoreMediaData {
+                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            }
+            adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
+        }
+
+        writerInput.markAsFinished()
+        await writer.finishWriting()
+
+        return writer.status == .completed ? outputURL : nil
     }
 
     // MARK: - Composition

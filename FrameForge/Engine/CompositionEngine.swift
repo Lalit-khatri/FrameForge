@@ -127,7 +127,8 @@ final class CompositionEngine: Sendable {
 
                     for clip in track.clips {
                         guard let url = clip.assetURL else { continue }
-                        let asset = AVURLAsset(url: url)
+                        let effectiveURL = (clip.isReversed && clip.reversedAssetURL != nil) ? clip.reversedAssetURL! : url
+                        let asset = AVURLAsset(url: effectiveURL)
 
                         guard let assetVideoTrack = try await asset.loadTracks(withMediaType: .video).first else { continue }
 
