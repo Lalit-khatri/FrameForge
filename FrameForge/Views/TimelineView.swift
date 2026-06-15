@@ -201,6 +201,7 @@ struct TimelineView: View {
         case .video:
             viewModel.showMediaPicker = true
         case .audio:
+            viewModel.targetAudioTrackID = track.id
             viewModel.showAudioBrowser = true
         case .text:
             viewModel.showTextEditor = true

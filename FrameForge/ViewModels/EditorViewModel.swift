@@ -65,6 +65,7 @@ final class EditorViewModel {
     var globalFadeIn: Double = 0.0   // seconds for project-wide fade-in
     var globalFadeOut: Double = 0.0  // seconds for project-wide fade-out
     var showAudioBrowser = false
+    var targetAudioTrackID: UUID?  // When set, audio is added to this specific track
     var showFullscreenPreview = false
     var hasUnsavedChanges = false
     var toastMessage: ToastMessage?
@@ -381,16 +382,20 @@ final class EditorViewModel {
         let durationSeconds = CMTimeGetSeconds(duration)
 
         let audioTrackIndices = tracks.enumerated().filter { $0.element.type == .audio }
-        let emptyTrackIndex = audioTrackIndices.first(where: { $0.element.clips.isEmpty })?.offset
 
         let targetIndex: Int
-        if let emptyIdx = emptyTrackIndex {
+        if let targetID = targetAudioTrackID,
+           let idx = tracks.firstIndex(where: { $0.id == targetID }) {
+            // User tapped a specific audio track in the timeline
+            targetIndex = idx
+        } else if let emptyIdx = audioTrackIndices.first(where: { $0.element.clips.isEmpty })?.offset {
             targetIndex = emptyIdx
         } else {
             let newTrack = TimelineTrack(type: .audio)
             tracks.append(newTrack)
             targetIndex = tracks.count - 1
         }
+        targetAudioTrackID = nil  // Reset after use
 
         let existingEnd = tracks[targetIndex].clips.last?.endTime ?? 0
 
