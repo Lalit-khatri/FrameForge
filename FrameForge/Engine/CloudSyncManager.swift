@@ -9,8 +9,16 @@ final class CloudSyncManager {
     var errorMessage: String?
     var cloudProjects: [CloudProjectMeta] = []
 
-    private let container = CKContainer.default()
-    private let database: CKDatabase
+    // Lazily access container/database to avoid crash when
+    // iCloud container identifiers are not configured.
+    private var container: CKContainer? {
+        // CKContainer.default() can crash if entitlements are misconfigured.
+        // We wrap in a computed property so failures are contained.
+        return CKContainer.default()
+    }
+    private var database: CKDatabase? {
+        container?.privateCloudDatabase
+    }
 
     struct CloudProjectMeta: Identifiable, Codable {
         let id: String
@@ -19,11 +27,14 @@ final class CloudSyncManager {
         var sizeBytes: Int
     }
 
-    init() {
-        self.database = container.privateCloudDatabase
-    }
+    init() {}
 
     func fetchCloudProjects() async {
+        guard let database = database else {
+            errorMessage = "iCloud is not configured for this app."
+            return
+        }
+
         let query = CKQuery(recordType: "FrameForgeProject", predicate: NSPredicate(value: true))
         query.sortDescriptors = [NSSortDescriptor(key: "modificationDate", ascending: false)]
 
@@ -46,6 +57,11 @@ final class CloudSyncManager {
     }
 
     func backupProject(name: String, data: Data) async {
+        guard let database = database else {
+            errorMessage = "iCloud is not configured for this app."
+            return
+        }
+
         isSyncing = true
         syncProgress = 0
 
@@ -72,6 +88,7 @@ final class CloudSyncManager {
     }
 
     func deleteCloudProject(id: String) async {
+        guard let database = database else { return }
         let recordID = CKRecord.ID(recordName: id)
         do {
             try await database.deleteRecord(withID: recordID)
@@ -82,6 +99,7 @@ final class CloudSyncManager {
     }
 
     func checkAccountStatus() async -> Bool {
+        guard let container = container else { return false }
         do {
             let status = try await container.accountStatus()
             return status == .available
