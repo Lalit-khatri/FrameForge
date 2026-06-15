@@ -123,15 +123,7 @@ struct ToolbarView: View {
                 toolButton("Beat Sync", icon: "metronome", color: .white) {
                     viewModel.showBeatSync = true
                 }
-                toolButton("Filters", icon: "camera.filters", color: .white) {
-                    viewModel.showFiltersPanel = true
-                }
-                toolButton("Effects", icon: "sparkles", color: .white) {
-                    viewModel.showEffectsPanel = true
-                }
-                toolButton("LUT", icon: "paintpalette", color: .white) {
-                    viewModel.showLUTImport = true
-                }
+
                 toolButton("Split", icon: "rectangle.split.2x2", color: .white) {
                     viewModel.showSplitScreen = true
                 }
@@ -186,6 +178,9 @@ struct ToolbarView: View {
                 }
                 toolButton("Effects", icon: "sparkles", color: .white) {
                     viewModel.showEffectsPanel = true
+                }
+                toolButton("LUT", icon: "paintpalette", color: .white) {
+                    viewModel.showLUTImport = true
                 }
                 toolButton("Mask", icon: "rectangle.on.rectangle", color: .white) {
                     viewModel.showMasking = true
