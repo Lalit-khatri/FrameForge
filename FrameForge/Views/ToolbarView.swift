@@ -159,71 +159,141 @@ struct ToolbarView: View {
     }
 
     private var clipToolbar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        let trackType = viewModel.selectedClipTrackType ?? .video
+        let isVideo = trackType == .video
+        let isPhoto = trackType == .video || trackType == .overlay // photos live on video tracks
+        let isVisual = trackType == .video || trackType == .overlay
+        let isAudio = trackType == .audio
+        let isText = trackType == .text
+
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 20) {
+                // ── Universal tools (all clip types) ──
                 toolButton("Split", icon: "scissors", color: .white) {
                     viewModel.splitClipAtPlayhead()
                 }
-                toolButton("Crop", icon: "crop", color: .white) {
-                    viewModel.showCropTool = true
+
+                // ── Visual media tools (video + overlay) ──
+                if isVisual {
+                    toolButton("Crop", icon: "crop", color: .white) {
+                        viewModel.showCropTool = true
+                    }
                 }
-                toolButton("Speed", icon: "gauge.with.dots.needle.33percent", color: .white) {
-                    viewModel.showSpeedControl = true
+
+                // ── Video-only tools ──
+                if isVideo {
+                    toolButton("Speed", icon: "gauge.with.dots.needle.33percent", color: .white) {
+                        viewModel.showSpeedControl = true
+                    }
                 }
-                toolButton("Volume", icon: "speaker.wave.2", color: .white) {
-                    viewModel.showAudioMixer = true
+
+                // ── Audio tools (video + audio) ──
+                if isVideo || isAudio {
+                    toolButton("Volume", icon: "speaker.wave.2", color: .white) {
+                        viewModel.showAudioMixer = true
+                    }
                 }
-                toolButton("Filters", icon: "camera.filters", color: .white) {
-                    viewModel.showFiltersPanel = true
+
+                // ── Visual filter tools (video + overlay) ──
+                if isVisual {
+                    toolButton("Filters", icon: "camera.filters", color: .white) {
+                        viewModel.showFiltersPanel = true
+                    }
+                    toolButton("Effects", icon: "sparkles", color: .white) {
+                        viewModel.showEffectsPanel = true
+                    }
+                    toolButton("LUT", icon: "paintpalette", color: .white) {
+                        viewModel.showLUTImport = true
+                    }
+                    toolButton("Mask", icon: "rectangle.on.rectangle", color: .white) {
+                        viewModel.showMasking = true
+                    }
                 }
-                toolButton("Effects", icon: "sparkles", color: .white) {
-                    viewModel.showEffectsPanel = true
+
+                // ── Transition (visual clips: video, text, overlay) ──
+                if !isAudio {
+                    toolButton("Transition", icon: "arrow.right.arrow.left", color: .white) {
+                        viewModel.showTransitionsPanel = true
+                    }
                 }
-                toolButton("LUT", icon: "paintpalette", color: .white) {
-                    viewModel.showLUTImport = true
+
+                // ── PiP (video + overlay only) ──
+                if isVisual {
+                    toolButton("PiP", icon: "pip", color: .white) {
+                        viewModel.showPiP = true
+                    }
                 }
-                toolButton("Mask", icon: "rectangle.on.rectangle", color: .white) {
-                    viewModel.showMasking = true
+
+                // ── Video-only tools ──
+                if isVideo {
+                    toolButton("Reverse", icon: "arrow.uturn.backward", color: .white) {
+                        if let id = viewModel.selectedClipID { viewModel.reverseClip(clipID: id) }
+                    }
+                    toolButton("Stabilize", icon: "hand.raised", color: .white) {
+                        viewModel.showStabilization = true
+                    }
                 }
-                toolButton("Transition", icon: "arrow.right.arrow.left", color: .white) {
-                    viewModel.showTransitionsPanel = true
+
+                // ── Denoise (video + audio) ──
+                if isVideo || isAudio {
+                    toolButton("Denoise", icon: "waveform.badge.minus", color: .white) {
+                        viewModel.showNoiseReduction = true
+                    }
                 }
-                toolButton("PiP", icon: "pip", color: .white) {
-                    viewModel.showPiP = true
-                }
-                toolButton("Reverse", icon: "arrow.uturn.backward", color: .white) {
-                    if let id = viewModel.selectedClipID { viewModel.reverseClip(clipID: id) }
-                }
-                toolButton("Stabilize", icon: "hand.raised", color: .white) {
-                    viewModel.showStabilization = true
-                }
-                toolButton("Denoise", icon: "waveform.badge.minus", color: .white) {
-                    viewModel.showNoiseReduction = true
-                }
+
+                // ── Universal tools ──
                 toolButton("Duplicate", icon: "plus.square.on.square", color: .white) {
                     viewModel.duplicateSelectedClip()
                 }
-                toolButton("Freeze", icon: "pause.rectangle", color: .white) {
-                    viewModel.addFreezeFrame()
+
+                // ── Video-only ──
+                if isVideo {
+                    toolButton("Freeze", icon: "pause.rectangle", color: .white) {
+                        viewModel.addFreezeFrame()
+                    }
                 }
+
+                // ── Universal ──
                 toolButton("Delete", icon: "trash", color: .red) {
                     showDeleteClipAlert = true
                 }
-                toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
-                    viewModel.showBackgroundRemoval = true
+
+                // ── Visual clip tools (video + overlay) ──
+                if isVisual {
+                    toolButton("BG Remove", icon: "person.crop.rectangle", color: .white) {
+                        viewModel.showBackgroundRemoval = true
+                    }
                 }
-                toolButton("Keyframe", icon: "diamond", color: .white) {
-                    viewModel.showKeyframeEditor = true
+
+                // ── Keyframe (visual clips: video, text, overlay) ──
+                if !isAudio {
+                    toolButton("Keyframe", icon: "diamond", color: .white) {
+                        viewModel.showKeyframeEditor = true
+                    }
                 }
-                toolButton("Track", icon: "scope", color: .white) {
-                    viewModel.showMotionTracking = true
+
+                // ── Video-only advanced tools ──
+                if isVideo {
+                    toolButton("Track", icon: "scope", color: .white) {
+                        viewModel.showMotionTracking = true
+                    }
                 }
-                toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
-                    viewModel.showChromaKey = true
+
+                // ── Chroma (video + overlay) ──
+                if isVisual {
+                    toolButton("Chroma", icon: "person.and.background.dotted", color: .white) {
+                        viewModel.showChromaKey = true
+                    }
                 }
-                toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
-                    viewModel.showCurveSpeed = true
+
+                // ── Video-only ──
+                if isVideo {
+                    toolButton("Curve", icon: "point.topleft.down.to.point.bottomright.curvepath", color: .white) {
+                        viewModel.showCurveSpeed = true
+                    }
                 }
+
+                // ── Universal ──
                 toolButton("Deselect", icon: "xmark.circle", color: .gray) {
                     viewModel.selectedClipID = nil
                 }
