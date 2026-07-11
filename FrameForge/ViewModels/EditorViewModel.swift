@@ -895,6 +895,13 @@ final class EditorViewModel {
         return nil
     }
 
+    /// Returns the track type of the currently selected clip.
+    var selectedClipTrackType: TrackType? {
+        guard let clipID = selectedClipID,
+              let (ti, _) = findClipIndices(clipID) else { return nil }
+        return tracks[ti].type
+    }
+
     func applyMotionTrack(_ data: MotionTrackData, toClip clipID: UUID) {
         guard let (ti, ci) = findClipIndices(clipID) else { return }
         tracks[ti].clips[ci].motionTrack = data
